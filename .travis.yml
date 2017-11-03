@@ -7,4 +7,4 @@ php:
   - '7.1'
 
 before_script:
-  - mysql --version;
+  - "mysql -e 'create database IF NOT EXISTS hello_world_test';"
