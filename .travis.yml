@@ -7,5 +7,5 @@ php:
   - '7.1'
 
 before_script:
-  - "mysql -e 'create database IF NOT EXISTS coral_test;'"
+  - php tests/install.php
   - "mysql -e 'show databases;'"
