@@ -2979,12 +2979,16 @@ a.save-button
 }
 a.btn {
 	padding: 3px 10px;
+	text-decoration: none !important;
 }
 .btn-primary {
 	color: #FFFFFF !important;
-	text-decoration: none !important;
-	border: none;
 	background: #1b76a9;
+}
+
+.btn-success {
+	color: #FFFFFF !important;
+	background: #4B7717;
 }
 
 /*--- Text Helpers ---*/
@@ -2993,6 +2997,9 @@ a.btn {
 }
 .text-danger {
 	color: #99351E;
+}
+.text-warning {
+	color: #746500;
 }
 
 /*--- Add Space Between Up/Down Arrows ---*/
