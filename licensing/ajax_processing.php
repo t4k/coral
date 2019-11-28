@@ -1168,6 +1168,33 @@ switch ($_GET['action']) {
 
 		break;
 
+    //used to verify organization name isn't already being used as it's added
+    case 'submitTermsToolSettings':
+
+        $safePost = filter_input_array(INPUT_POST, array(
+            'resolver' => FILTER_SANITIZE_STRING,
+            'open_url' => FILTER_SANITIZE_URL,
+            'sid' => FILTER_SANITIZE_STRING,
+            'client_identifier' => FILTER_SANITIZE_STRING
+        ));
+        $ini_file = BASE_DIR . "/admin/configuration.ini";
+        require_once BASE_DIR."../common/write_php_ini.php";
+
+        $ini_array = parse_ini_file($ini_file, true);
+
+        $ini_array['terms']['resolver'] = $safePost['resolver'];
+        $ini_array['terms']['open_url'] = $safePost['open_url'];
+        $ini_array['terms']['sid'] = $safePost['sid'];
+        $ini_array['terms']['client_identifier'] = $safePost['client_identifier'];
+        try {
+            write_php_ini($ini_file, $ini_array);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo $e->getMessage();
+        }
+
+        break;
+
 	default:
        echo _("Action ") . $action . _(" not set up!");
        break;

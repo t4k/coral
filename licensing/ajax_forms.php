@@ -1189,6 +1189,72 @@ switch ($_GET['action']) {
 
 		break;
 
+  case 'getTermsToolSettingsForm':
+    $config = new Configuration();
+    ?>
+    <div id='div_updateTermsToolSettingsForm'>
+      <table class="thickboxTable" style="width:290px;padding:2px;">
+        <tr>
+          <td colspan="2">
+            <span class='headerText'><?php echo _("Update Terms Tool Settings"); ?></span>
+            <br/><span id='span_errors' style='color:#F00;'></span><br/>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <label for="termsToolResolver">Resolver</label>
+          </td>
+          <td>
+            <select name="resolver" id="termsToolResolver">
+              <?php foreach (['SFX', 'SerialsSolutions', 'EBSCO'] as $v): ?>
+                <option
+                  value="<?php echo $v; ?>"
+                  <?php echo $config->terms->resolver == $v ? 'selected' : ''; ?>
+                  data-resolver="<?php echo $v; ?>"
+                ><?php echo $v; ?></option>
+              <?php endforeach; ?>
+            </select>
+          </td>
+        </tr>
+        <tr class="tt-option-SFX">
+          <td><label for="termsToolOpenUrl"><?php echo _('Open URL'); ?></label></td>
+          <td><input type="text" name="open_url" id="termsToolOpenUrl" value="<?php echo $config->terms->open_url; ?>">
+          </td>
+        </tr>
+        <tr class="tt-option-SerialsSolutions tt-option-EBSCO">
+          <td><label for="termsToolClientId"></label></td>
+          <td><input type="text" name="client_identifier" id="termsToolClientId"
+                     value="<?php echo $config->terms->client_identifier; ?>"></td>
+        </tr>
+        <tr class="tt-option-SFX tt-option-EBSCO">
+          <td><label for="termsToolSID"></label></td>
+          <td><input type="text" name="sid" id="termsToolSID" value="<?php echo $config->terms->sid; ?>"></td>
+        </tr>
+        <tr>
+          <td style="width:60px;"><input type="button" value="<?php echo _('Save'); ?>"
+                                         onclick='javascript:window.parent.submitTermsToolSettings();'
+                                         id="submitTermsToolSettings" class="submit-button"></td>
+          <td><input type="button" value="<?php echo _("cancel"); ?>" onclick="window.parent.tb_remove(); return false"
+                     class="cancel-button"></td>
+        </tr>
+      </table>
+    </div>
+
+
+    <script type="text/javascript">
+        $('#termsToolResolver').change(function (e) {
+            var selected = $(this).val();
+            var sidText = selected === 'EBSCO' ? '<?php echo _('Api Key'); ?>' : 'SID';
+            var clientIdText = selected === 'EBSCO' ? '<?php echo _('Customer ID'); ?>' : '<?php echo _('Client ID'); ?>';
+            $('tr[class*="tt-option"]').hide();
+            $('.tt-option-' + selected).css('display', 'table-row');
+            $('label[for="termsToolSID"]').html(sidText);
+            $('label[for="termsToolClientId"]').html(clientIdText);
+        }).trigger('change');
+    </script>
+
+    <?php
+    break;
 
 	default:
        echo _("Action ") . $action . _(" not set up!");

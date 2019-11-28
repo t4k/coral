@@ -27,9 +27,7 @@
       updateForm('Status');
       updateCalendarSettingsList();
       updateQualifierList();
-
-
-
+      updateTermsToolSettings();
  });
 
 
@@ -114,6 +112,19 @@
        });
 
   }
+
+function updateTermsToolSettings() {
+  $.ajax({
+    type: "GET",
+    url: "ajax_htmldata.php",
+    cache: false,
+    data: "action=getTermsToolSettings",
+    success: function (html) {
+      $('#div_TermsTool').html(html);
+      tb_reinit();
+    }
+  });
+}
 
 
  function addData(tableName){
@@ -248,6 +259,24 @@ function submitQualifier(){
             }
         });
     }
+}
+
+function submitTermsToolSettings() {
+  $.ajax({
+    type: "POST",
+    url: "ajax_processing.php?action=submitTermsToolSettings",
+    cache: false,
+    data: {
+      resolver: $('#termsToolResolver').val(),
+      sid: $('#termsToolSID').val(),
+      open_url: $('#termsToolOpenUrl').val(),
+      client_identifier: $('#termsToolClientId').val()
+    },
+    success: function (html) {
+      updateTermsToolSettings();
+      window.parent.tb_remove();
+    }
+  });
 }
 
  function deleteData(tableName, deleteID){
