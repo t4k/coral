@@ -9,14 +9,14 @@
 
 		//first set current start Date for proper saving
 		if ((isset($_POST['currentStartDate'])) && ($_POST['currentStartDate'] != '')){
-			$resourceAcquisition->subscriptionStartDate = date("Y-m-d", strtotime($_POST['currentStartDate']));
+			$resourceAcquisition->subscriptionStartDate = create_date_from_js_format($_POST['currentStartDate'])->format('Y-m-d');
 		}else{
 			$resourceAcquisition->subscriptionStartDate = '';
 		}
 
 		//first set current end Date for proper saving
 		if ((isset($_POST['currentEndDate'])) && ($_POST['currentEndDate'] != '')){
-			$resourceAcquisition->subscriptionEndDate = date("Y-m-d", strtotime($_POST['currentEndDate']));
+			$resourceAcquisition->subscriptionEndDate = create_date_from_js_format($_POST['currentEndDate'])->format('Y-m-d');
 		}else{
 			$resourceAcquisition->subscriptionEndDate = '';
 		}

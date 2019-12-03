@@ -59,7 +59,7 @@ switch ($_GET['action']) {
 
 		//first set effective Date for proper saving
 		if ((isset($_POST['effectiveDate'])) && ($_POST['effectiveDate'] != '')){
-			$document->effectiveDate = date("Y-m-d", strtotime($_POST['effectiveDate']));
+			$document->effectiveDate = create_date_from_js_format($_POST['effectiveDate'])->format('Y-m-d');
 		}else{
 			$document->effectiveDate= 'null';
 		}
@@ -212,7 +212,7 @@ switch ($_GET['action']) {
     case 'submitSignature':
     	//set date for proper saving
         if ((isset($_POST['signatureDate'])) && ($_POST['signatureDate'] != '')){
-			$signatureDate = date("Y-m-d", strtotime($_POST['signatureDate']));
+			$signatureDate = create_date_from_js_format($_POST['signatureDate'])->format('Y-m-d');
 		}else{
 			$signatureDate = "";
 		}
@@ -976,7 +976,7 @@ switch ($_GET['action']) {
 		}
 
     	if ((isset($_POST['sentDate'])) && ($_POST['sentDate'] <> "")){
-    		$attachment->sentDate = date("Y-m-d", strtotime($_POST['sentDate']));
+    		$attachment->sentDate = create_date_from_js_format($_POST['sentDate'])->format('Y-m-d');
     	}else{
     		$attachment->sentDate = "";
     	}
