@@ -188,7 +188,7 @@ $title->loadResource();
                                         <div style="text-align: center; margin-top: 1em">
                                             <p>
                                                 <?php if($resource->isSelected): ?>
-                                                    <strong class="text-succes"><?php echo _('Title Selected'); ?></strong>
+                                                    <strong class="text-success"><?php echo _('Title Selected'); ?></strong>
                                                 <?php else: ?>
                                                     <strong><?php echo _('Title Not Selected'); ?></strong>
                                                 <?php endif; ?>
