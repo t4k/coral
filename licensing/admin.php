@@ -171,6 +171,31 @@ if ($config->settings->organizationsModule != 'Y'){ ?>
 
 <?php } ?>
 
+  <?php
+//if the Terms Tool is used, display options
+  if ($config->settings->useTermsToolFunctionality == 'Y') { ?>
+
+    <br/>
+    <br/>
+
+    <table class="headerTable">
+      <tr>
+        <td>
+          <span class="headerText"><?php echo _("Terms Tool Settings"); ?></span>&nbsp;&nbsp;<span
+            id='span_TermsTool_response'></span>
+          <br/><a href="ajax_forms.php?action=getTermsToolSettingsForm&height=158&width=265&modal=true"
+                  class="thickbox"><?php echo _("edit"); ?></a>
+          <br/>
+          <br/>
+          <div id='div_TermsTool'>
+            <img src="images/circle.gif"><?php echo _("Loading..."); ?>
+          </div>
+        </td>
+      </tr>
+    </table>
+
+  <?php } ?>
+
 <br />
 
 <script type="text/javascript" src="js/admin.js"></script>
