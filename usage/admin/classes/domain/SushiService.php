@@ -607,7 +607,8 @@ class SushiService extends DatabaseObject {
         }
 
         $string = file_get_contents($fName);
-        $clean_xml = str_ireplace(['s:','SOAP-ENV:','SOAP:'],'',$string);
+    // Gets rid of all namespace references
+        $clean_xml = $this->stripNamespaces($string);
         $xml = simplexml_load_string($clean_xml);
 
         $txtOut = "";
@@ -816,6 +817,24 @@ class SushiService extends DatabaseObject {
 
 		$this->saveLogAndExit($layoutCode, $txtFile, true);
 	}
+
+  private function stripNamespaces($string)
+  {
+    $sxe = new SimpleXMLElement($string);
+    $doc = new DOMDocument();
+    $doc->loadXML($string);
+    foreach ($sxe->getNamespaces(true) as $name => $uri) {
+      if (!empty($name)) {
+        $finder = new DOMXPath($doc);
+        $nodes = $finder->query("//*[namespace::{$name} and not(../namespace::{$name})]");
+        foreach ($nodes as $n) {
+          $ns_uri = $n->lookupNamespaceURI($name);
+          $n->removeAttributeNS($ns_uri, $name);
+        }
+      }
+    }
+    return $doc->saveXML(null, LIBXML_NOEMPTYTAG);
+  }
 
 }
 
