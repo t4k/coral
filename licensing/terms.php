@@ -86,36 +86,37 @@ foreach($uniqueExpressionTypeArray as $expressionTypeId) {
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>Terms Tool - License Terms</title>
     <link rel="stylesheet" href="css/style.css" type="text/css" />
+    <link rel="stylesheet" href="css/terms.css" type="text/css" />
 </head>
 <body>
-<div style="margin:10px auto; width: 900px; background: white; padding: 20px; text-align: left;">
+<div style="margin:10px auto; width: 900px; text-align: left;">
     <?php if(!empty($error)): ?>
         <p><?php echo $error; ?></p>
     <?php else: ?>
         <?php foreach($expressionTypes as $expressionType): ?>
-        <div class="darkShaded" style="width:664px; padding:8px; margin:0 0 7px 0;">
+        <div class="darkShaded" id="the-terms-titlebar">
             <h1>
-                <?php echo $expressionType->shortName; ?> Terms <small>for <?php echo $termsToolObj->getTitle(); ?></small>
+                <?php echo $expressionType->shortName; ?> Terms for <?php echo $termsToolObj->getTitle(); ?>
             </h1>
         </div>
-        <div style="margin-left:5px;">
+        <div id="the-terms">
             <?php foreach($expressionType->reorderTargets($targetsArray) as $i => $targetArray): ?>
                 <span class="titleText"><?php echo $targetArray['public_name']; ?></span>
 
                 <?php $expressionArray = $expressionType->getExpressionsByResource($targetArray['public_name']); ?>
 
                 <?php if (empty($expressionArray)): ?>
-                    <p>No <?php echo $expressionType->shortName; ?> terms are defined.</p>
+                    <p>No <?php echo $expressionType->shortName; ?> terms defined.</p>
                 <?php else: ?>
                     <?php foreach ($expressionArray as $expression): ?>
                         <p>
-                            Terms as of <?php echo format_date($expression->getLastUpdateDate); ?> The following terms apply
+                            Terms as of <?php echo format_date($expression->getLastUpdateDate); ?> — the following terms apply
                             ONLY to articles accessed via <a href="<?php echo $targetArray['target_url']; ?>" target="_blank">
                                 <?php echo $targetArray['public_name']; ?>
                             </a>
                         </p>
-                        <div style="margin:0 0 30px 20px;">
-                            <div class="shaded" style="width:630px; padding:3px;">
+                        <div style="margin:0 0 30px 0;">
+                            <div class="shaded" style="width:850px; padding:3px;">
                                 <?php
                                     $qualifierArray = array();
                                     // variables for permitted/prohibited qualifiers (this should match up with the available qualifiers in the license module)
@@ -135,7 +136,7 @@ foreach($uniqueExpressionTypeArray as $expressionTypeId) {
                                         }
                                     }
                                 ?>
-                                <strong> <?php echo $expressionType->shortName; ?> Notes:</strong> <?php if($icon): ?><img src="<?php echo $icon; ?>"><?php endif; ?>
+                                <strong><?php echo $expressionType->shortName; ?> Notes:</strong> <?php if($icon): ?><img src="<?php echo $icon; ?>"><?php endif; ?>
                                 <ul style="margin-left: 20px;">
                                 <?php if (!empty($qualifierArray)): ?>
                                     <li>Qualifier: <?php echo implode(", ", $qualifierArray); ?></li>
@@ -146,8 +147,8 @@ foreach($uniqueExpressionTypeArray as $expressionTypeId) {
                                 </ul>
                             </div>
                             <?php if ($expression->documentText): ?>
-                                <div style="width:600px;">
-                                    <p><strong>From the license agreement <?php echo get_effective_date($expression->documentID); ?></strong></p>
+                                <div style="width:850px;">
+                                    <p><strong>From the license agreement <?php echo get_effective_date($expression->documentID); ?>:</strong></p>
                                     <p><em><?php echo nl2br($expression->documentText); ?></em></p>
                                 </div>
                             <?php endif; ?>
@@ -160,4 +161,3 @@ foreach($uniqueExpressionTypeArray as $expressionTypeId) {
     <?php endif; ?>
 </div>
 </body>
-</html>
