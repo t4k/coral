@@ -599,7 +599,8 @@ class Resource extends DatabaseObject {
 		}
 
 		if ($search['createDateStart']) {
-			$whereAdd[] = "R.createDate >= STR_TO_DATE('" . $resource->db->escapeString($search['createDateStart']) . "','%m/%d/%Y')";
+		  $startDate = create_date_from_js_format($search['createDateStart'])->format('Y-m-d');
+			$whereAdd[] = "R.createDate >= '". $resource->db->escapeString($startDate) ."'";
 			if (!$search['createDateEnd']) {
 				$searchDisplay[] = _("Created on or after: ") . $search['createDateStart'];
 			} else {
@@ -608,7 +609,8 @@ class Resource extends DatabaseObject {
 		}
 
 		if ($search['createDateEnd']) {
-			$whereAdd[] = "R.createDate <= STR_TO_DATE('" . $resource->db->escapeString($search['createDateEnd']) . "','%m/%d/%Y')";
+      $endDate = create_date_from_js_format($search['createDateEnd'])->format('Y-m-d');
+			$whereAdd[] = "R.createDate <= '" . $resource->db->escapeString($endDate) . "'";
 			if (!$search['createDateStart']) {
 				$searchDisplay[] = _("Created on or before: ") . $search['createDateEnd'];
 			}
