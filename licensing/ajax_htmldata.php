@@ -1423,8 +1423,33 @@ switch ($_GET['action']) {
 
 		break;
 
+  case 'getTermsToolSettings':
+    $config = new Configuration();
+    $output = array('Resolver' => $config->terms->resolver);
+    switch ($config->terms->resolver) {
+      case 'SFX':
+        $output['Open URL'] = $config->terms->open_url;
+        $output['SID'] = $config->terms->sid;
+        break;
+      case 'SerialsSolutions':
+        $output['Client ID'] = $config->terms->client_identifier;
+        break;
+      case 'EBSCO':
+        $output['Customer ID'] = $config->terms->client_identifier;
+        $output['Api Key'] = $config->terms->sid;
+        break;
+      default:
+        break;
+    }
+    echo '<table class="dataTable" style="width: 400px;">';
+    foreach ($output as $k => $v) {
+      echo sprintf('<tr><td>%s</td><td>%s</td></tr>', _($k), $v);
+    }
+    echo '<table>';
+    break;
 
-	//display qualifier list for admin screen - needs its own display because of expression type
+
+  //display qualifier list for admin screen - needs its own display because of expression type
 	case 'getQualifierList':
 
 
