@@ -1,9 +1,5 @@
 <?php
 
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
-
 include_once 'directory.php';
 include "common.php";
 
@@ -25,9 +21,9 @@ if (empty($platformID) && empty($publisherPlatformID)){
 
 $config = new Configuration();
 
-if ($publisherPlatformID) {
+if ($publisherPlatformID != '') {
   $obj = new PublisherPlatform(new NamedArguments(array('primaryKey' => $publisherPlatformID)));
-}else if ($platformID){
+}else if ($platformID != ''){
   $obj = new Platform(new NamedArguments(array('primaryKey' => $platformID)));
 }
 

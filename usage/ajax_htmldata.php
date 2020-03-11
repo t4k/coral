@@ -556,7 +556,7 @@ switch ($action) {
 
 		if (count($statsArray) > 0){
 
-      echo "<a href=\"deletePublisherPlatformConfirmation.php?$deleteParam&statsOnly=true\" class=\"save-button\" style=\"background-color: #7a0026; float: right;\">Delete All Stats</a>";
+      echo "<a href=\"deletePublisherPlatformConfirmation.php?$deleteParam&statsOnly=true\" class=\"save-button\" style=\"background-color: #7a0026; float: right;\">". _('Delete All Stats') ."</a>";
       echo "<h3 style='margin-bottom:7px;'>" . _("Statistics Management") . "</h3>";
 
 			$holdYear = "";

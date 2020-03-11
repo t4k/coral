@@ -1,9 +1,5 @@
 <?php
 
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
-
 include_once 'directory.php';
 include "common.php";
 
@@ -141,7 +137,7 @@ include 'templates/header.php';
         foreach (glob("sushistore/*$globname*.xml") as $filename) {
           $files[] = '<li>' . str_replace('sushistore/', '', $filename) . '</li>';
         }
-        if (count($files > 0)) {
+        if (count($files) > 0) {
           echo '<h3>'. _('SUSHI XML Files') . '</h3>';
           echo '<ul>' . implode($files) . '</ul>';
         }
@@ -158,13 +154,14 @@ include 'templates/header.php';
           foreach($statsArray as $statArray){
             $year = $statArray['year'];
             if ($year != $holdYear){
-              echo "<ul><li>$year";
+              $endPreviousUl = $holdYear == '' ? '' : '</ul>';
+              echo "$endPreviousUl<ul><li>$year<ul>";
               $holdYear = $year;
             }
 
             $archive = $statArray['archiveInd'] == '1' ? "&nbsp;" . _('(archive)') : '';
             $outlierText = $statArray['outlierID'] > 0 ? '*' : '';
-            echo '<ul><li>'.$statArray['resourceType'] . 's' . $outlierText . $archive . ': ';
+            echo '<li>'.$statArray['resourceType'] . 's' . $outlierText . $archive . ': ';
 
             //loop through each month
             $monthArray = array();
@@ -180,7 +177,7 @@ include 'templates/header.php';
             }
 
             echo implode(', ', $monthArray);
-            echo '</ul></li></ul></li></ul>';
+            echo '</li>';
           }
         }
         ?>

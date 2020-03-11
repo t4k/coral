@@ -1064,8 +1064,10 @@ class Platform extends DatabaseObject {
     require_once 'SushiService.php';
     $sushiService = new SushiService();
     $sushiService->getByPlatformID($this->platformID);
+
     if ($sushiService->platformID != ''){
-      $sushiService->delete();
+      $deleteSushiServiceQuery = "DELETE FROM SushiService WHERE platformID = ".$this->platformID;
+      $this->db->processQuery($deleteSushiServiceQuery);
     }
 
     // Delete sushistore files

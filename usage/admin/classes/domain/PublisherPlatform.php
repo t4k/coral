@@ -693,7 +693,7 @@ class PublisherPlatform extends DatabaseObject {
     return $this->db->processQuery($query);
   }
 
-  public function deleteAllStats() {
+  public function deleteStats() {
     // Monthly Stats
     $this->deleteAllMonthlyStats();
     // Yearly Stats
@@ -725,8 +725,8 @@ class PublisherPlatform extends DatabaseObject {
     // Sushi Files & Config
     require_once 'SushiService.php';
     $sushiService = new SushiService();
-    $sushiService->getByPlatformID($this->platformID);
-    if ($sushiService->platformID != ''){
+    $sushiService->getByPublisherPlatformID($this->publisherPlatformID);
+    if ($sushiService->publisherPlatformID != ''){
       $sushiService->delete();
     }
 
@@ -743,7 +743,7 @@ class PublisherPlatform extends DatabaseObject {
     }
 
     // all stats
-    $this->deleteAllStats();
+    $this->deleteStats();
 
     // this
     parent::delete();
