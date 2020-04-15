@@ -415,7 +415,7 @@ while (!feof($file_handle)) {
 		// Query to see if the Publisher / Platform already exists, if so, get the ID
 		#################################################################
 		//check it against the previous row - no need to do another lookup if we've already figured out the publisherplatformID
-		if (!isset($publisherPlatformID) || ($publisherName != $holdPublisher) || ($platformName != $holdPlatform)){
+		if (empty($publisherPlatformID) || ($publisherName != $holdPublisher) || ($platformName != $holdPlatform)){
 			//get the publisher platform object
 			$publisherPlatformTestObj = new PublisherPlatform();
 			$publisherPlatformObj = $publisherPlatformTestObj->getPublisherPlatform($publisherID, $platformID);

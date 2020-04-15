@@ -201,8 +201,12 @@ class SushiService extends DatabaseObject {
 			$this->statusLog = array();
 			$this->detailLog = array();
 
-			$xmlFile = $this->sushiTransfer($reportLayout);
-			$this->parseXML($xmlFile, $reportLayout, $overwritePlatform);
+			$file = $this->sushiTransfer($reportLayout);
+			if ($this->releaseNumber < 5) {
+        $this->parseXML($file, $reportLayout, $overwritePlatform);
+      } else {
+			  $this->parseJson($file, $reportLayout, $overwritePlatform);
+      }
 
 			$detailsForOutput = $this->statusLog;
 		}
@@ -332,8 +336,115 @@ class SushiService extends DatabaseObject {
 
 	}
 
+  private function sushiTransfer($reportLayout) {
+    $ppObj = $this->getPublisherOrPlatform();
+    $serviceProvider = str_replace('"','',$ppObj->reportDisplayName);
+    if($this->releaseNumber < 5) {
+      return $this->xmlTransfer($reportLayout, $serviceProvider);
+    } else {
+      return $this->jsonTransfer($reportLayout, $serviceProvider);
+    }
+
+  }
+
+  /*
+   * RELEASE 5 REST API
+   */
+
+  private function curlClient($endpoint) {
+
+  }
+
+  private function jsonTransfer($reportLayout, $serviceProvider) {
+
+    $startDate = date_create($this->startDate);
+    $endDate = date_create($this->endDate);
+    if ($this->startDate > $this->endDate) {
+      $this->logStatus("Invalid Dates entered. Must enter a start before end date.");
+      $this->saveLogAndExit($reportLayout);
+    }
+
+    // setup params
+    $params = array(
+      'begin_date' => date_format($startDate,'Y-m'),
+      'end_date' => date_format($endDate,'Y-m'),
+      'customer_id' => $this->customerID
+    );
+
+    if ($this->requestorID) {
+      $key = empty($this->requestorKey) ? 'requestor_id' : $this->requestorKey;
+      $params[$key] = $this->requestorID;
+    }
+
+    // setup curl client
+    $trailingSlash = substr($this->serviceURL,-1) == '/' ? '' : '/';
+    $endpoint = $this->serviceURL.$trailingSlash.'reports/'.strtolower($reportLayout).'?'.http_build_query($params);
+    $ch = curl_init($endpoint);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+    if (preg_match("/http/i", $this->security)) {
+      curl_setopt($ch, CURLOPT_USERPWD, $this->login . ":" . $this->password);
+    }
+    curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+    $this->log("Connecting to $this->serviceURL");
+
+    // try executing curl
+    try {
+      $response = curl_exec($ch);
+    } catch(Exception $e) {
+      $error = $e->getMessage();
+      $this->logStatus("Exception performing curl request with connection to $serviceProvider: $error");
+      $this->saveLogAndExit($reportLayout);
+    }
+
+    // check for curl errors
+    if(curl_errno($ch)){
+      $this->logStatus("Request Error with connection to $serviceProvider:" . curl_error($ch));
+      $this->saveLogAndExit($reportLayout);
+    }
+    curl_close($ch);
 
 
+    $fname = $serviceProvider.'_'.$reportLayout.'_'.$this->startDate.'_'.$this->endDate.'.json';
+    $replace="_";
+    $pattern="/([[:alnum:]_\.-]*)/";
+    $fname = 'sushistore/' . str_replace(str_split(preg_replace($pattern,$replace,$fname)),$replace,$fname);
+
+    $jsonFileName = BASE_DIR . $fname;
+    file_put_contents($jsonFileName, $response);
+
+    //open file to look for errors
+    if (!file_get_contents($jsonFileName)) {
+      $this->logStatus("Failed trying to open json file: " . $jsonFileName . ".  This could be due to not having write access to the /sushistore/ directory.");
+      $this->saveLogAndExit($reportLayout);
+    }
+
+    $json = file_get_contents($jsonFileName);
+
+    try {
+      $json = json_decode($json);
+    } catch(Exception $e) {
+      $error = $e->getMessage();
+      $this->logStatus("There was an error trying to parse the json file: $jsonFileName. This could be due to a malformed response from the sushi service. Error: $error");
+      $this->saveLogAndExit($reportLayout);
+    }
+
+    if (!empty($json->Severity)) {
+      $this->logStatus("Received an error from $serviceProvider: $json->Message");
+      $this->saveLogAndExit($reportLayout);
+    }
+
+    $this->log("$reportLayout successfully retrieved from $serviceProvider for start date:  $this->startDate, end date: $this->endDate");
+    $this->log("");
+    $this->log("-- Sushi Transfer completed --");
+
+    return $fname;
+  }
+
+
+  /*
+   * RELEASE 4 SOAP Connections
+   */
 	private function soapConnection($wsdl, $parameters){
 
 		$parameters = array_merge($parameters, array(
@@ -384,19 +495,19 @@ class SushiService extends DatabaseObject {
 
 
 
-	private function sushiTransfer($reportLayout){
 
 
+	private function xmlTransfer($reportLayout, $serviceProvider){
 
-		$ppObj = $this->getPublisherOrPlatform();
-		$serviceProvider = str_replace('"','',$ppObj->reportDisplayName);
+    //if report layout is BR and Release is 3, change it to 1
+    if((preg_match('/BR/i', $reportLayout)) && ($this->releaseNumber == "3")){
+      $releaseNumber = '1';
+    }else{
+      $releaseNumber = $this->releaseNumber;
+    }
 
-		//if report layout is BR and Release is 3, change it to 1
-		if((preg_match('/BR/i', $reportLayout)) && ($this->releaseNumber == "3")){
-			$releaseNumber = '1';
-		}else{
-			$releaseNumber = $this->releaseNumber;
-		}
+    $createDate = date("Y-m-d\TH:i:s.0\Z");
+    $id = uniqid("CORAL:", true);
 
 		if (($this->wsdlURL == '') || (strtoupper($this->wsdlURL) == 'COUNTER')){
 			if ($this->releaseNumber == "4"){
@@ -407,11 +518,6 @@ class SushiService extends DatabaseObject {
 		}else{
 			$wsdl=$this->wsdlURL;
 		}
-
-
-
-		$createDate = date("Y-m-d\TH:i:s.0\Z");
-		$id = uniqid("CORAL:", true);
 
 		// look at $Security to ses if it uses an extension
 		if(preg_match('/Extension=/i', $this->security)){
@@ -573,14 +679,14 @@ class SushiService extends DatabaseObject {
 				$this->logStatus("$serviceProvider says: $severity: $message");
 			}
 		}
-		if (!$dateError)
-			$this->log("$reportLayout successfully retrieved from $serviceProvider for start date:  $this->startDate, end date: $this->endDate");
+		if (!$dateError) {
+      $this->log("$reportLayout successfully retrieved from $serviceProvider for start date:  $this->startDate, end date: $this->endDate");
+    }
 
 		$this->log("");
 		$this->log("-- Sushi Transfer completed --");
 
 		return $fname;
-
 
 	}
 
