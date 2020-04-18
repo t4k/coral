@@ -351,10 +351,6 @@ class SushiService extends DatabaseObject {
    * RELEASE 5 REST API
    */
 
-  private function curlClient($endpoint) {
-
-  }
-
   private function jsonTransfer($reportLayout, $serviceProvider) {
 
     $startDate = date_create($this->startDate);

@@ -530,9 +530,9 @@ switch ($action) {
 				<td><input type='text' id='requestorID' name='requestorID' value="<?php if ($sushiServiceID) echo $sushiService->requestorID; ?>" style='width:150px;' /></td>
 			</tr>
       <tr>
-        <td style='vertical-align:top;text-align:right;width:135px;'><label for='requestorKey'><b><?php echo _("Requestor ID label:");?></b></label></td>
-        <td><input type='text' id='requestorKey' name='requestorKey' value="<?php if ($sushiServiceID) echo $sushiService->requestorKey; ?>" style='width:150px;' />
-          <span class="smallDarkRedText"><br /><?php echo _("for Release 5, some vendors use a different label for the Requestor ID. For example, Proquest uses 'api_key'");?></span>
+        <td style='vertical-align:top;text-align:right;width:135px;'><label for='apiKey'><b><?php echo _("API Key:");?></b></label></td>
+        <td><input type='text' id='apiKey' name='apiKey' value="<?php if ($sushiServiceID) echo $sushiService->apiKey; ?>" style='width:150px;' />
+          <span class="smallDarkRedText"><br /><?php echo _("for Release 5, some vendors use an API Key for authentication.");?></span>
         </td>
       </tr>
 			<tr>

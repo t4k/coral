@@ -465,7 +465,7 @@ switch ($action) {
 			echo "<tr><td>" . _("COUNTER Release") . "</td><td>" . $sushiService->releaseNumber . "</td></tr>";
 			echo "<tr><td>" . _("Report Layouts") . "</td><td>" . $sushiService->reportLayouts . "</td></tr>";
 			echo "<tr><td>" . _("Requestor ID") . "</td><td>" . $sushiService->requestorID . "</td></tr>";
-      echo "<tr><td>" . _("Requestor ID label") . "</td><td>" . $sushiService->requestorKey . "</td></tr>";
+      echo "<tr><td>" . _("API Key") . "</td><td>" . $sushiService->apiKey . "</td></tr>";
 			echo "<tr><td>" . _("Customer ID") . "</td><td>" . $sushiService->customerID . "</td></tr>";
 			echo "<tr><td>" . _("Security") . "</td><td>" . $sushiService->security . "</td></tr>";
 			echo "<tr><td>" . _("Login") . "</td><td>" . $sushiService->login . "</td></tr>";
