@@ -1,4 +1,5 @@
 ALTER TABLE TitleIdentifier MODIFY identifier VARCHAR(255);
+ALTER TABLE ImportLog MODIFY fileName VARCHAR(255);
 
 INSERT INTO Layout (layoutCode, name, resourceType) VALUES ("PR_R5", "Platform Master Report (PR) R5", "Platform");
 INSERT INTO Layout (layoutCode, name, resourceType) VALUES ("PR_P1_R5", "Platform Usage (PR_P1) R5", "Platform");
