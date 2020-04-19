@@ -24,12 +24,6 @@ ALTER TABLE MonthlyUsageSummary ADD COLUMN monthIncomplete INT(1) DEFAULT 0;
 ALTER TABLE MonthlyUsageSummary ADD COLUMN yop INT(11) NULL;
 ALTER TABLE MonthlyUsageSummary ADD COLUMN layoutID INT(11) NULL;
 
-ALTER TABLE YearlyUsageSummary ADD COLUMN accessType VARCHAR(255) NULL;
-ALTER TABLE YearlyUsageSummary ADD COLUMN accessMethod VARCHAR(255) NULL;
-ALTER TABLE YearlyUsageSummary ADD COLUMN monthIncomplete INT(1) DEFAULT 0;
-ALTER TABLE YearlyUsageSummary ADD COLUMN yop INT(11) NULL;
-ALTER TABLE YearlyUsageSummary ADD COLUMN layoutID INT(11) NULL;
-
 ALTER TABLE Title ADD COLUMN publicationDate DATETIME NULL;
 ALTER TABLE Title ADD COLUMN articleVersion VARCHAR(255) NULL;
 ALTER TABLE Title ADD COLUMN authors VARCHAR(255) NULL;

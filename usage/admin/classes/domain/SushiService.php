@@ -93,7 +93,6 @@ class SushiService extends DatabaseObject
     }
   }
 
-
   public function getServiceProvider()
   {
     return str_replace('"', '', $this->getPublisherOrPlatform->reportDisplayName);
@@ -175,7 +174,9 @@ class SushiService extends DatabaseObject
 
   }
 
-
+  /*********************************************************************************************************************
+   * Runners
+   */
   //run through ajax function on publisherplatform
   public function runTest()
   {
@@ -187,9 +188,9 @@ class SushiService extends DatabaseObject
     $eDate = date_format(date_create_from_format("Ymd", date("Y") . "0131"), "Y-m-d");
     $this->setImportDates($sDate, $eDate);
 
-
+    $serviceProvider = $this->getServiceProvider();
     foreach ($rlArray as $reportLayout) {
-      $xmlFile = $this->sushiTransfer($reportLayout);
+       $this->sushiTransfer($reportLayout, $serviceProvider);
     }
 
     if ($reportLayouts == "") {
@@ -204,184 +205,121 @@ class SushiService extends DatabaseObject
   public function runAll($overwritePlatform = TRUE)
   {
     $reportLayouts = $this->reportLayouts;
-    $rlArray = explode(";", $reportLayouts);
-
-    $detailsForOutput = array();
-
-    foreach ($rlArray as $reportLayout) {
-      $this->statusLog = array();
-      $this->detailLog = array();
-
-      $file = $this->sushiTransfer($reportLayout);
-      if ($this->releaseNumber < 5) {
-        $this->parseXML($file, $reportLayout, $overwritePlatform);
-      } else {
-        $this->parseJson($file, $reportLayout, $overwritePlatform);
-      }
-
-      $detailsForOutput = $this->statusLog;
-    }
 
     if ($reportLayouts == "") {
       return _("No report types are set up!");
     }
 
+    $detailsForOutput = array();
+
+    $rlArray = explode(";", $reportLayouts);
+    $serviceProvider = $this->getServiceProvider();
+    foreach ($rlArray as $reportLayout) {
+      $detailsForOutput = $this->run($reportLayout, $serviceProvider, $overwritePlatform);
+    }
+
     return implode("\n", $detailsForOutput);
   }
 
+  public function run($reportLayout, $serviceProvider, $overwritePlatform) {
+    $this->statusLog = array();
+    $this->detailLog = array();
 
-  public function setDefaultImportDates()
-  {
+    // get sushi report
+    $response = $this->sushiTransfer($reportLayout, $serviceProvider);
+    $ext = $this->releaseNumber > 5 ? '.json' : '.xml';
 
-    // Determine the End Date
-    //start with first day of this month
-    $endDate = date_create_from_format("Ymd", date("Y") . date("m") . "01");
-
-    //subtract one day
-    date_sub($endDate, date_interval_create_from_date_string('1 days'));
-    $this->endDate = date_format($endDate, "Y-m-d");
-
-    //Determine the Start Date
-    //first, get this publisher/platform's last day of import
-    $lastImportDate = $this->getPublisherOrPlatform->getLastImportDate();
-    $lastImportDate = date_create_from_format("Y-m-d", $lastImportDate);
-    date_add($lastImportDate, date_interval_create_from_date_string('1 month'));
-
-    //if that date is set and it's sooner than the first of this year, default it to that date
-    if (($lastImportDate) && (date_format($lastImportDate, "Y-m-d") > date_format($endDate, "Y") . "-01-01")) {
-      $this->startDate = date_format($lastImportDate, "Y-m-d");
-    } else {
-      $this->startDate = date_format($endDate, "Y") . "-01-01";
-    }
-
-  }
-
-
-  public function setImportDates($sDate = null, $eDate = null)
-  {
-
-    if (!$sDate) {
-      $this->setDefaultImportDates();
-    } else {
-      //using the multiple functions in order to make sure leading zeros, and this is a date
-      $this->startDate = date_format(date_create_from_format("Y-m-d", $sDate), "Y-m-d");
-      $this->endDate = date_format(date_create_from_format("Y-m-d", $eDate), "Y-m-d");
-    }
-
-  }
-
-
-  //status for storing in DB and displaying in rows
-  private function logStatus($logText)
-  {
-    array_push($this->statusLog, $logText);
-    array_push($this->detailLog, $logText);
-  }
-
-  //longer log for storing in log file and displaying output
-  private function log($logText)
-  {
-    array_push($this->detailLog, $logText);
-  }
-
-  //logs process to import log table and to log file
-  public function saveLogAndExit($reportLayout = NULL, $txtFile = NULL, $success = FALSE)
-  {
-
-
-    //First, delete any preexisting Failured records, these shouldn't be needed/interesting after this.
-    $this->log("Cleaning up prior failed import logs....");
-
-    $this->getPublisherOrPlatform->removeFailedSushiImports;
-
-    if (!$txtFile) {
-      $txtFile = strtotime("now") . '.txt';
-    }
-    $logFileLocation = 'logs/' . $txtFile;
-
-    $this->log("Log File Name: $logFileLocation");
-
-    if ($success) {
-      $this->logStatus("Finished processing " . $this->getServiceProvider . ": $reportLayout.");
-    }
-
-    //save the actual log file
-    $fp = fopen(BASE_DIR . $logFileLocation, 'w');
-    fwrite($fp, implode("\n", $this->detailLog));
-    fclose($fp);
-
-
-    //save to import log!!
-    $importLog = new ImportLog();
-    $importLog->loginID = "sushi";
-    $importLog->importDateTime = date('Y-m-d H:i:s');
-    $importLog->layoutCode = $reportLayout;
-    $importLog->fileName = 'archive/' . $txtFile;
-    $importLog->archiveFileURL = 'archive/' . $txtFile;
-    $importLog->logFileURL = $logFileLocation;
-    $importLog->details = implode("<br />", $this->statusLog);
-
-    try {
-      $importLog->save();
-      $importLogID = $importLog->primaryKey;
-    } catch (Exception $e) {
-      echo $e->getMessage();
-    }
-
-    $importLogPlatformLink = new ImportLogPlatformLink();
-    $importLogPlatformLink->importLogID = $importLogID;
-    $importLogPlatformLink->platformID = $this->platformID;
-
-
-    try {
-      $importLogPlatformLink->save();
-    } catch (Exception $e) {
-      echo $e->getMessage();
-    }
-
-    if (!$success) {
-      throw new Exception(implode("\n", $this->detailLog));
-    }
-
-
-  }
-
-  private function sushiTransfer($reportLayout)
-  {
-    $ppObj = $this->getPublisherOrPlatform();
-    $serviceProvider = str_replace('"', '', $ppObj->reportDisplayName);
-    if ($this->releaseNumber < 5) {
-      $report = $this->xmlTransfer($reportLayout, $serviceProvider);
-      $ext = '.xml';
-    } else {
-      $report = $this->jsonTransfer($reportLayout, $serviceProvider);
-      $ext = '.json';
-    }
-
-    $fname = $serviceProvider . '_' . $reportLayout . '_' . $this->startDate . '_' . $this->endDate . $ext;
+    // Save the response
+    $filename = $serviceProvider . '_' . $reportLayout . '_' . $this->startDate . '_' . $this->endDate;
     $replace = "_";
     $pattern = "/([[:alnum:]_\.-]*)/";
-    $fname = 'archive/' . str_replace(str_split(preg_replace($pattern, $replace, $fname)), $replace, $fname);
+    $file = BASE_DIR . 'sushistore/' . str_replace(str_split(preg_replace($pattern, $replace, $filename)), $replace, $filename) . $ext;
 
-    $fileName = BASE_DIR . $fname;
-    file_put_contents($fileName, $report);
+    file_put_contents($file, $response);
 
-    //open file to look for errors
-    if (!file_get_contents($jsonFileName)) {
-      $this->logStatus("Failed trying to open json file: " . $jsonFileName . ".  This could be due to not having write access to the /sushistore/ directory.");
+    //Test that response was saved
+    if (!file_get_contents($file)) {
+      $this->logStatus("Failed trying to open file: " . $file . ".  This could be due to not having write access to the /sushistore/ directory.");
       $this->saveLogAndExit($reportLayout);
     }
+
+    // parse the report
+    if ($this->releaseNumber < 5) {
+      $report = $this->parseXML($file, $reportLayout, $serviceProvider, $serviceProvider);
+    } else {
+      $report = $this->parseJson($file, $overwritePlatform, $serviceProvider);
+    }
+    $this->log("Finished parsing " . $this->getServiceProvider . ": $reportLayout.");
+
+    // validate and save the report
+    $txtOut = '';
+    //determine the format of the report to port to csv from the layouts.ini file
+    $layoutCode = $reportLayout . '_R' . $this->releaseNumber;
+    $layoutsArray = parse_ini_file(BASE_DIR . "layouts.ini", true);
+    $layoutKey = $layoutsArray['ReportTypes'][$layoutCode];
+    $layoutColumns = $layoutsArray[$layoutKey]['columns'];
+
+    if (count($layoutColumns) == 0 || $layoutCode == ''){
+      $this->logStatus("Failed determining layout:  Reached report items before establishing layout.  Please make sure this layout is set up in layouts.ini");
+      $this->saveLogAndExit($reportLayout);
+    }
+
+    $monthColumns = array_map(function($m) {
+      return $m['columnName'];
+    },$report['header']['months']);
+    $header = array_merge($layoutColumns,$monthColumns);
+
+    $txtOut .= implode($header, "\t") . "\n";
+    $this->log("Layout validated successfully against layouts.ini : " . $layoutCode);
+
+
+    // Add rows
+    foreach($report['rows'] as $row) {
+      $finalArray = array();
+      // Use the report's layoutcode's columns to order them properly
+      foreach($layoutColumns as $colName){
+        $finalArray[] = isset($row[$colName]) ? $row[$colName] : null;
+      }
+      foreach($row['months'] as $m) {
+        $finalArray[] = $m;
+      }
+      $txtOut .= implode($finalArray,"\t") . "\n";
+    }
+
+    #Save final text delimited "file" and log output on server
+    $txtFile =  $filename . '_' . strtotime('now') . '.txt';
+    $fp = fopen(BASE_DIR . 'archive/' . $txtFile, 'w');
+    fwrite($fp, $txtOut);
+    fclose($fp);
+
+    $this->log("");
+    $this->log("-- Sushi report writing completed --");
+    $this->log("Archive/Text File Name: " . Utility::getPageURL() . 'archive/' . $txtFile);
+    $this->saveLogAndExit($layoutCode, $txtFile, true);
+
+    return $this->statusLog;
   }
 
-  /*
-   * RELEASE 5 REST API
+  /*********************************************************************************************************************
+   * Requestors
    */
+
+  private function sushiTransfer($reportLayout, $serviceProvider)
+  {
+    if ($this->releaseNumber < 5) {
+      $response = $this->xmlTransfer($reportLayout, $serviceProvider);
+    } else {
+      $response = $this->jsonTransfer($reportLayout, $serviceProvider);
+    }
+    return $response;
+  }
 
   private function jsonTransfer($reportLayout, $serviceProvider)
   {
 
     $startDate = date_create($this->startDate);
     $endDate = date_create($this->endDate);
+    // End Date is earlier than start date
     if ($this->startDate > $this->endDate) {
       $this->logStatus("Invalid Dates entered. Must enter a start before end date.");
       $this->saveLogAndExit($reportLayout);
@@ -448,10 +386,6 @@ class SushiService extends DatabaseObject
     return $response;
   }
 
-
-  /*
-   * RELEASE 4 SOAP Connections
-   */
   private function soapConnection($wsdl, $parameters)
   {
 
@@ -586,62 +520,52 @@ class SushiService extends DatabaseObject
       }
 
     }
-    $uStartArray = explode("-", $this->startDate);
-    $usd = $uStartArray[2];//the start day used to find the unix timestamp for the start date
-    $usm = $uStartArray[1];//the start month used to find the unix timestamp for the start date
-    $usy = $uStartArray[0];//the start year used to find the unix timestamp for the start date
-    $uStartDate = mktime(0, 0, 0, $usm, $usd, $usy);//finds the unix timestamp for the start date
-    //Do exactly the same thing for the end date
-    $uEndDate = explode("-", $this->endDate);
-    $ued = $uEndDate[2];
-    $uem = $uEndDate[1];
-    $uey = $uEndDate[0];
-    $uEndDate = mktime(0, 0, 0, $uem, $ued, $uey);
-    if (($uEndDate - $uStartDate) < 31536000) {
-      try {
-        $reportRequest = array
-        ('Requestor' => array
-          ('ID' => $this->requestorID,
-            'Name' => 'CORAL Processing',
-            'Email' => $this->requestorID
-          ),
-          'CustomerReference' => array
-          ('ID' => $this->customerID,
-            'Name' => 'CORAL Processing'
-          ),
-          'ReportDefinition' => array
-          ('Filters' => array
-            ('UsageDateRange' => array
-              ('Begin' => $this->startDate,
-                'End' => $this->endDate
-              )
-            ),
-            'Name' => $reportLayout,
-            'Release' => $releaseNumber
-          ),
-          'Created' => $createDate,
-          'ID' => $id,
-          'connection_timeout' => 1000
-        );
-        $dateError = FALSE;
-
-        $result = $client->GetReport($reportRequest);
-      } catch (Exception $e) {
-        $error = $e->getMessage();
-
-        $this->logStatus("Exception performing GetReport with connection to $serviceProvider: $error");
-
-        //exceptions seem to happen that don't matter, continue processing and if no data or error is found then it will quit.
-        //$this->saveLogAndExit($reportLayout);
-      }
-    } else {
-      $dateError = TRUE;
-      $this->logStatus("Invalid Dates entered. Must enter a start and end date less than or equal to one year apart.");
+    $startDate = new DateTime($this->startDate);
+    $startDate->modify('first day of this month');
+    $endDate = new DateTime($this->endDate);
+    $endDate->modify('last day of this month');
+    // End Date is earlier than start date
+    if ($startDate > $endDate) {
+      $this->logStatus("Invalid Dates entered. Must enter a start before end date.");
+      $this->saveLogAndExit($reportLayout);
     }
+    try {
+      $reportRequest = array
+      ('Requestor' => array
+        ('ID' => $this->requestorID,
+          'Name' => 'CORAL Processing',
+          'Email' => $this->requestorID
+        ),
+        'CustomerReference' => array
+        ('ID' => $this->customerID,
+          'Name' => 'CORAL Processing'
+        ),
+        'ReportDefinition' => array
+        ('Filters' => array
+          ('UsageDateRange' => array
+            ('Begin' => $startDate->format('Y-m-d'),
+              'End' => $endDate->format('Y-m-d')
+            )
+          ),
+          'Name' => $reportLayout,
+          'Release' => $releaseNumber
+        ),
+        'Created' => $createDate,
+        'ID' => $id,
+        'connection_timeout' => 1000
+      );
+      $dateError = FALSE;
 
+      $result = $client->GetReport($reportRequest);
+    } catch (Exception $e) {
+      $error = $e->getMessage();
 
+      $this->logStatus("Exception performing GetReport with connection to $serviceProvider: $error");
+
+      //exceptions seem to happen that don't matter, continue processing and if no data or error is found then it will quit.
+      //$this->saveLogAndExit($reportLayout);
+    }
     $xml = $client->__getLastResponse();
-
     // Check for errors
     try {
       $reader = XMLReader::xml($xml);
@@ -678,19 +602,471 @@ class SushiService extends DatabaseObject
         $this->logStatus("$serviceProvider says: $severity: $message");
       }
     }
-    if (!$dateError) {
-      $this->log("$reportLayout successfully retrieved from $serviceProvider for start date:  $this->startDate, end date: $this->endDate");
+
+    return $xml;
+  }
+
+  /*********************************************************************************************************************
+   * Parsers
+   */
+
+  private function parseXML($fName, $reportLayout, $overwritePlatform, $serviceProvider)
+  {
+    //////////////////////////////////////
+    //PARSE XML!!
+    //////////////////////////////////////
+
+    // Setup report months
+    $reportMonths = $this->reportMonths($this->startDate, $this->endDate);
+
+    //read layouts ini file to get the available layouts
+
+    $metrics = parse_ini_file(BASE_DIR . "metrics.ini");
+
+    $string = file_get_contents($fName);
+    // Gets rid of all namespace references
+    $clean_xml = $this->stripNamespaces($string);
+    $xml = simplexml_load_string($clean_xml);
+
+    $report = array(
+      'header' => array(),
+      'rows' => array(),
+    );
+
+    //First - get report information
+    $data = $xml->Body->ReportResponse->Report->Report;
+    $report['header']['id'] = $data->attributes()->Name;
+    $report['header']['release'] = $data->attributes()->Version;
+    $report['header']['months'] = $reportMonths;
+
+    foreach ($data->Customer->ReportItems as $resource) {
+
+      //reset variables
+      /**
+       * Each $reportArray is slightly different
+       * JR1: Need aggregated count columns of ytd, ytdPDF, ytdHTML
+       * BR1: Need aggregated count columns of ytd
+       * DB1: Need separate rows based on activity type, but aggregated counts for those activity types
+       */
+      $row = array();
+
+      if ($overwritePlatform) {
+        $row['platform'] = $serviceProvider;
+      } else {
+        $row['platform'] = $resource->ItemPlatform[0]->__toString();
+      }
+      $row['publisher'] = $resource->ItemPublisher->__toString();
+      $row['title'] = $resource->ItemName->__toString();
+      foreach ($resource->ItemIdentifier as $identifier) {
+        $idType = strtoupper($identifier->Type);
+        if (!(strrpos($idType, 'PRINT') === false) && !(strrpos($idType, 'ISSN') === false)) {
+          $row['issn'] = $identifier->Value->__toString();
+        } else if (!(strrpos($idType, 'ONLINE') === false) && !(strrpos($idType, 'ISSN') === false)) {
+          $row['eissn'] = $identifier->Value->__toString();
+        } else if (!(strpos($idType, 'PRINT') === false) && !(strpos($idType, 'ISBN') === false)) {
+          $row['isbn'] = $identifier->Value->__toString();
+        } else if (!(strpos($idType, 'ONLINE') === false) && !(strpos($idType, 'ISBN') === false)) {
+          $row['eisbn'] = $identifier->Value->__toString();
+        } else if (!(strpos($idType, 'DOI') === false)) {
+          $row['doi'] = $identifier->Value->__toString();
+        } else if (!(strpos($idType, 'PROPRIETARY') === false)) {
+          $row['pi'] = $identifier->Value->__toString();
+        }
+      }
+
+      // If this is a DB1 report, we need 1 row of stats for each possible metric type
+      if ($reportLayout == 'DB1') {
+        // Get all possible metric types for the resource
+        $metricTypes = array();
+        foreach ($resource->ItemPerformance as $monthlyStat) {
+          foreach ($monthlyStat->Instance as $metricStat) {
+            $type = $metricStat->MetricType->__toString();
+            if (!in_array($type, $metricTypes)) {
+              $metricTypes[] = $type;
+            }
+          }
+        }
+
+        $stashedRow = $row;
+
+        foreach ($metricTypes as $type) {
+          $metricRow = $stashedRow;
+          $metricRow['activityType'] = empty($metrics[$type]) ? $type : $metrics[$type];
+          $metricRow['ytd'] = 0;
+          $metricRow['months'] = array();
+          foreach ($reportMonths as $month) {
+            $metricRow['months'][$month['columnName']] = 0;
+            foreach ($resource->ItemPerformance as $monthlyStat) {
+              if ($month['start'] == $monthlyStat->Period->Begin) {
+                foreach ($monthlyStat->Instance as $metricStat) {
+                  if ($metricStat->MetricType->__toString() == $type) {
+                    $metricRow['months'][$month['columnName']] = intval($metricStat->Count);
+                  }
+                }
+              }
+            }
+          }
+          $metricRow['ytd'] = array_reduce($metricRow['months'], function ($carry, $item) {
+            $carry += $item;
+            return $carry;
+          });
+          if ($metricRow['ytd'] > 0) {
+            $report['rows'][] = $metricRow;
+          }
+        }
+
+        // JR & BR Reports
+      } else {
+
+        $row['ytd'] = 0;
+        if ($reportLayout == 'JR1') {
+          $row['ytdPDF'] = 0;
+          $row['ytdHTML'] = 0;
+        }
+        foreach ($reportMonths as $month) {
+          $row['months'][$month['columnName']] = array('ytd' => 0, 'ytdPDF' => 0, 'ytdHTML' => 0);
+          foreach ($resource->ItemPerformance as $monthlyStat) {
+            if ($month['start'] == $monthlyStat->Period->Begin) {
+              foreach ($monthlyStat->Instance as $metricStat) {
+                $count = intval($metricStat->Count);
+                if ($metricStat->MetricType == 'ft_total') {
+                  $row['months'][$month['columnName']]['ytd'] = $count;
+                }
+                if (stripos($metricStat->MetricType, 'pdf')) {
+                  $row['months'][$month['columnName']]['ytdPDF'] = $count;
+                }
+                if (stripos($metricStat->MetricType, 'html')) {
+                  $row['months'][$month['columnName']]['ytdHTML'] = $count;
+                }
+              }
+              // This check is needed in case 'ft_total' was not in the report
+              if ($row['months'][$month['columnName']]['ytd'] == 0) {
+                $row['months'][$month['columnName']]['ytd'] = $row['months'][$month['columnName']]['ytdPDF'] + $row['months'][$month['columnName']]['ytdHTML'];
+              }
+            }
+          }
+        }
+
+        $row['ytd'] = array_reduce($row['months'], function ($carry, $item) {
+          $carry += $item['ytd'];
+          return $carry;
+        });
+        if ($reportLayout == 'JR1') {
+          $row['ytdPDF'] = array_reduce($row['months'], function ($carry, $item) {
+            $carry += $item['ytdPDF'];
+            return $carry;
+          });
+          $row['ytdHTML'] = array_reduce($row['months'], function ($carry, $item) {
+            $carry += $item['ytdHTML'];
+            return $carry;
+          });
+        }
+
+        $row['months'] = array_map(function($r) {
+          return $r['ytd'];
+        }, $row['months']);
+
+        $report['rows'][] = $row;
+      }
     }
 
-    $this->log("");
-    $this->log("-- Sushi Transfer completed --");
+    return $report;
+  }
 
-    return $fname;
+  private function parseJson($fName, $overwritePlatform, $serviceProvider)
+  {
 
+    // Setup report months
+    $reportMonths = $this->reportMonths($this->startDate, $this->endDate);
+
+    $string = file_get_contents($fName);
+    $data = json_decode($string, true);
+
+    $report = array(
+      'header' => array(),
+      'rows' => array(),
+    );
+
+    $report['header']['id'] = $data['Report_Header']['Report_ID'];
+    $report['header']['release'] = $data['Report_Header']['Release'];
+    $report['header']['months'] = $reportMonths;
+
+    foreach ($data['Report_Items'] as $resource) {
+
+      $row = array();
+
+      // publisher
+      if ($overwritePlatform) {
+        $row['platform'] = $serviceProvider;
+      } else {
+        $row['platform'] = $resource['Platform'];
+      }
+
+      // all string values
+      foreach (array_keys($resource) as $key) {
+        if (is_array($resource[$key]) || is_object($resource[$key]) || $key == 'Platform') {
+          continue;
+        }
+        $row[$this->r5Attr($key)] = $resource[$key];
+      }
+
+      // identifiers
+      foreach ($resource['Item_ID'] as $id) {
+        $row[$this->r5Attr($id['Type'])] = $id['Value'];
+      }
+
+      // Get all possible metric types for the resource
+      $metricTypes = array();
+      foreach ($resource['Performance'] as $monthlyStat) {
+        foreach ($monthlyStat['Instance'] as $metricStat) {
+          $type = $metricStat['Metric_Type'];
+          if (!in_array($type, $metricTypes)) {
+            $metricTypes[] = $type;
+          }
+        }
+      }
+      $stashedRow = $row;
+
+      foreach ($metricTypes as $type) {
+        $metricRow = $stashedRow;
+        $metricRow['activityType'] = $type;
+        $metricRow['months'] = array();
+        foreach ($reportMonths as $month) {
+          $metricRow['months'][$month['columnName']] = 0;
+          foreach ($resource['Performance'] as $monthlyStat) {
+            if ($month['start'] == $monthlyStat['Period']['Begin_Date']) {
+              foreach ($monthlyStat['Instance'] as $metricStat) {
+                if ($metricStat['Metric_Type'] == $type) {
+                  $metricRow['months'][$month['columnName']] = intval($metricStat['Count']);
+                }
+              }
+            }
+          }
+        }
+        $metricRow['ytd'] = array_reduce($metricRow['months'], function ($carry, $item) {
+          $carry += $item;
+          return $carry;
+        });
+        if ($metricRow['ytd'] > 0) {
+          $report['rows'][] = $metricRow;
+        }
+      }
+    }
+    return $report;
+  }
+
+  /*********************************************************************************************************************
+   * Loggers
+   */
+
+//status for storing in DB and displaying in rows
+  private function logStatus($logText)
+  {
+    array_push($this->statusLog, $logText);
+    array_push($this->detailLog, $logText);
+  }
+
+  //longer log for storing in log file and displaying output
+  private function log($logText)
+  {
+    array_push($this->detailLog, $logText);
+  }
+
+  //logs process to import log table and to log file
+  public function saveLogAndExit($reportLayout = NULL, $filename = NULL, $success = FALSE)
+  {
+
+
+    //First, delete any preexisting Failured records, these shouldn't be needed/interesting after this.
+    $this->log("Cleaning up prior failed import logs....");
+
+    $this->getPublisherOrPlatform->removeFailedSushiImports;
+
+    if (!$filename) {
+      $logFilename = strtotime("now") . '.txt';
+    } else {
+      $logFilename = $filename;
+    }
+    $logFileLocation = 'logs/' . $logFilename;
+
+    $this->log("Log File Name: $logFileLocation");
+
+    if ($success) {
+      $this->logStatus("Finished processing " . $this->getServiceProvider . ": $reportLayout.");
+    }
+
+    //save the actual log file
+    $fp = fopen(BASE_DIR . $logFileLocation, 'w');
+    fwrite($fp, implode("\n", $this->detailLog));
+    fclose($fp);
+
+
+    //save to import log!!
+    $importLog = new ImportLog();
+    $importLog->loginID = "sushi";
+    $importLog->importDateTime = date('Y-m-d H:i:s');
+    $importLog->layoutCode = $reportLayout;
+    $importLog->fileName = 'archive/' . $filename;
+    $importLog->archiveFileURL = 'archive/' . $filename;
+    $importLog->logFileURL = $logFileLocation;
+    $importLog->details = implode("<br />", $this->statusLog);
+
+    try {
+      $importLog->save();
+      $importLogID = $importLog->primaryKey;
+    } catch (Exception $e) {
+      echo $e->getMessage();
+    }
+
+    $importLogPlatformLink = new ImportLogPlatformLink();
+    $importLogPlatformLink->importLogID = $importLogID;
+    $importLogPlatformLink->platformID = $this->platformID;
+
+
+    try {
+      $importLogPlatformLink->save();
+    } catch (Exception $e) {
+      echo $e->getMessage();
+    }
+
+    if (!$success) {
+      throw new Exception(implode("\n", $this->detailLog));
+    }
+
+  }
+
+  /*********************************************************************************************************************
+   * Utility
+   */
+
+  public function setDefaultImportDates()
+  {
+
+    // Determine the End Date
+    //start with first day of this month
+    $endDate = date_create_from_format("Ymd", date("Y") . date("m") . "01");
+
+    //subtract one day
+    date_sub($endDate, date_interval_create_from_date_string('1 days'));
+    $this->endDate = date_format($endDate, "Y-m-d");
+
+    //Determine the Start Date
+    //first, get this publisher/platform's last day of import
+    $lastImportDate = $this->getPublisherOrPlatform->getLastImportDate();
+    $lastImportDate = date_create_from_format("Y-m-d", $lastImportDate);
+    date_add($lastImportDate, date_interval_create_from_date_string('1 month'));
+
+    //if that date is set and it's sooner than the first of this year, default it to that date
+    if (($lastImportDate) && (date_format($lastImportDate, "Y-m-d") > date_format($endDate, "Y") . "-01-01")) {
+      $this->startDate = date_format($lastImportDate, "Y-m-d");
+    } else {
+      $this->startDate = date_format($endDate, "Y") . "-01-01";
+    }
+
+  }
+
+  public function setImportDates($sDate = null, $eDate = null)
+  {
+
+    if (!$sDate) {
+      $this->setDefaultImportDates();
+    } else {
+      //using the multiple functions in order to make sure leading zeros, and this is a date
+      $this->startDate = date_format(date_create_from_format("Y-m-d", $sDate), "Y-m-d");
+      $this->endDate = date_format(date_create_from_format("Y-m-d", $eDate), "Y-m-d");
+    }
+
+  }
+
+  private function stripNamespaces($string)
+  {
+    $sxe = new SimpleXMLElement($string);
+    $doc = new DOMDocument();
+    $doc->loadXML($string);
+    foreach ($sxe->getNamespaces(true) as $name => $uri) {
+      if (!empty($name)) {
+        $finder = new DOMXPath($doc);
+        $nodes = $finder->query("//*[namespace::{$name} and not(../namespace::{$name})]");
+        foreach ($nodes as $n) {
+          $ns_uri = $n->lookupNamespaceURI($name);
+          $n->removeAttributeNS($ns_uri, $name);
+        }
+      }
+    }
+    return $doc->saveXML(null, LIBXML_NOEMPTYTAG);
+  }
+
+  public function reportMonths($startDate, $endDate) {
+    $start = new DateTime($startDate);
+    $end = new DateTime($endDate);
+
+    $start->modify('first day of this month');
+    $end->modify('last day of this month');
+    $months = array();
+    while($start < $end) {
+      $month = array();
+      $month['start'] = $start->format('Y-m-d');
+      $start->modify('last day of this month');
+      $month['end'] = $start->format('Y-m-d');
+      $month['columnName'] = strtolower($start->format('M-Y'));
+
+      $months[] = $month;
+      $start->modify('last day of this month')->add(new DateInterval('P1D'));
+    }
+
+    return $months;
+  }
+
+  public function r5Attr($key) {
+    $map = array(
+      'Publisher_ID' => 'publisherID',
+      'Proprietary_ID' => 'pi',
+      'Proprietary' => 'pi',
+      'Data_Type' => 'dataType',
+      'Access_Method' => 'accessMethod',
+      'Metric_Type' => 'activityType',
+      'Reporting_Period_Total' => 'ytd',
+      'Print_ISSN' => 'issn',
+      'Online_ISSN' => 'eissn',
+      'Section_Type' => 'sectionType',
+      'Access_Type' => 'accessType',
+      'Publication_Date' => 'publicationDate',
+      'Article_Version' => 'articleVersion',
+      'Parent_Title' => 'parentTitle',
+      'Parent_Data_Type' => 'parentDataType',
+      'Parent_DOI' => 'parentDoi',
+      'Parent_Property_ID' => 'parentPi',
+      'Parent_ISBN' => 'parentIsbn',
+      'Parent_Print_ISSN' => 'parentIssn',
+      'Parent_Online_ISSN' => 'parentEissn',
+      'Parent_URI' => 'parentURI',
+      'Component_Title' => 'componentTitle',
+      'Component_Data_Type' => 'componentDataType',
+      'Component_DOI' => 'componentDoi',
+      'Component_Property_ID' => 'componentPi',
+      'Component_ISBN' => 'componentIsbn',
+      'Component_Print_ISSN' => 'componentIssn',
+      'Component_Online_ISSN' => 'componentEissn',
+      'Component_URI' => 'componentURI',
+    );
+    return isset($map[$key]) ? $map[$key] : strtolower($key);
   }
 
 }
 
+//for soap headers
+class clsWSSEAuth{
+  private $username;
+  private $password;
+  function __construct($username, $password){
+    $this->username=$username;
+    $this->password=$password;
+  }
+}
+class clsWSSEToken{
+  private $usernameToken;
+  function __construct ($innerVal){
+    $this->usernameToken = $innerVal;
+  }
+}
 
-
-?>
