@@ -21,9 +21,6 @@ include_once 'directory.php';
 
 $util = new Utility();
 
-$importLogID = filter_input(INPUT_GET, 'importLogID', FILTER_VALIDATE_INT);
-$fromSushi = !empty($importLogID) && $importLogID > 0;
-
 function cleanValue($value) {
   //strip everything after (Subs from Title
   if (strpos($value,' (Subs') !== false) {
@@ -33,10 +30,12 @@ function cleanValue($value) {
   $value = str_replace("\"","",$value);
 
   // set value to &nbsp; if value is empty
-  $value = (($value == '') || ($value == ' ')) ? '&nbsp;' : $value;
+  $value = (($value == '') || ($value == ' ')) ? "&nbsp;" : $value;
   return trim($value);
-
 }
+
+$importLogID = filter_input(INPUT_GET, 'importLogID', FILTER_VALIDATE_INT);
+$fromSushi = !empty($importLogID) && $importLogID > 0;
 
 // The page data differs for sushi and manual uploads. This adds clarity to what is rendered onto the page
 $page = array(
@@ -68,8 +67,6 @@ if ($fromSushi) {
 } else {
 
   //came from file import
-
-
 
   // before assessing file, check that the layoutID is valid
   $layoutID = filter_input(INPUT_POST, 'layoutID', FILTER_VALIDATE_INT);
@@ -115,8 +112,7 @@ if ($fromSushi) {
   // store the file
   // TODO: In the following code, uploading the file repeatedly will overwrite the archive/ file...until the next day.
   // This is slightly odd because the file is saved but never imported
-  // $targetPath = BASE_DIR . "archive/" . $pathInfo['filename'] .  "_" . strtotime('now') . '_' . '.txt';
-  $targetPath = BASE_DIR . "archive/" . $pathInfo['filename'] .  '_' . date("Ymd") . '.txt';
+  $targetPath = BASE_DIR . "counterstore/" . $pathInfo['filename'] . $pathInfo['extension'];
 
   if(move_uploaded_file($_FILES['usageFile']['tmp_name'], $targetPath)) {
     $page['status'][] = _("The file "). $pathInfo['basename'] ._(" has been uploaded successfully.")."<br />"._("Please confirm the following data:")."<br />";
@@ -218,6 +214,7 @@ include 'templates/header.php';
         <br>
       <?php endif; ?>
 
+
       <!-- REPORT NAME -->
       <p>
         <?php echo _('Report Format'); ?>: <?php echo $page['reportName']; ?>
@@ -270,6 +267,21 @@ include 'templates/header.php';
 
 			<br />
 			<form id="confirmForm" name="confirmForm" enctype="multipart/form-data" method="post" action="uploadComplete.php">
+        <!-- JR1 override warning -->
+        <?php if(!$fromSushi && in_array($layout->layoutCode, array('JR1_R4','JR1a_R4'))): ?>
+          <div style="background: lightgoldenrodyellow;padding: 10px;border: #8b7700 3px solid;">
+            <?php echo _('The following is a manually uploaded Journals (JR1) R4 report. In these reports, it is not possible to differentiate
+          a given month\'s Reporting Period PDF count and Reporting Period HTML count. Therefore, the default behavior
+          is to NOT store ANY Reporting Period Totals. By checking the box below, you are indicating you want to store these totals.
+          It is advised to only check this box if the report below contains a full year of data, from January to December.'); ?>
+            <div style="margin-top: 8px">
+              <label for="storeJR1Totals">
+                <input type="checkbox" id="storeJR1Totals" name="storeJR1Totals" value="Y">
+                <?php echo _('Store the Reporting Period PDF and Reporting Period YTD totals'); ?>
+              </label>
+            </div>
+          </div>
+        <?php endif; ?>
         <?php foreach($page['formValues'] as $key => $value): ?>
 				  <input type="hidden" name="<?php echo $key; ?>" value="<?php echo $value; ?>">
         <?php endforeach; ?>

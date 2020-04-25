@@ -730,9 +730,9 @@ class PublisherPlatform extends DatabaseObject {
       $sushiService->delete();
     }
 
-    // Delete sushistore files
+    // Delete counterstore files
     $globname = implode('_', explode(' ', $this->name));
-    $dir = __DIR__."/../../../sushistore/*$globname*.xml";
+    $dir = __DIR__ . "/../../../counterstore/*$globname*.xml";
     foreach (glob($dir) as $filename) {
       unlink($filename);
     }

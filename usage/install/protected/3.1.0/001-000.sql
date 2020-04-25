@@ -18,11 +18,18 @@ INSERT INTO Layout (layoutCode, name, resourceType) VALUES ("IR_R5", "Item Maste
 INSERT INTO Layout (layoutCode, name, resourceType) VALUES ("IR_A1_R5", "Journal Article Requests (IR_A1) R5", "Item");
 INSERT INTO Layout (layoutCode, name, resourceType) VALUES ("IR_M1_R5", "Multimedia Item Requests (IR_M1) R5", "Item");
 
+DELETE FROM Layout WHERE layoutCode IN ('JR1_R3','JR1a_R3','BR1_R3','DB1_R3');
+
 ALTER TABLE MonthlyUsageSummary ADD COLUMN accessType VARCHAR(255) NULL;
 ALTER TABLE MonthlyUsageSummary ADD COLUMN accessMethod VARCHAR(255) NULL;
-ALTER TABLE MonthlyUsageSummary ADD COLUMN monthIncomplete INT(1) DEFAULT 0;
 ALTER TABLE MonthlyUsageSummary ADD COLUMN yop INT(11) NULL;
 ALTER TABLE MonthlyUsageSummary ADD COLUMN layoutID INT(11) NULL;
+
+ALTER TABLE YearlyUsageSummary ADD COLUMN accessType VARCHAR(255) NULL;
+ALTER TABLE YearlyUsageSummary ADD COLUMN accessMethod VARCHAR(255) NULL;
+ALTER TABLE YearlyUsageSummary ADD COLUMN monthIncomplete INT(1) DEFAULT 0;
+ALTER TABLE YearlyUsageSummary ADD COLUMN yop INT(11) NULL;
+ALTER TABLE YearlyUsageSummary ADD COLUMN layoutID INT(11) NULL;
 
 ALTER TABLE Title ADD COLUMN publicationDate DATETIME NULL;
 ALTER TABLE Title ADD COLUMN articleVersion VARCHAR(255) NULL;

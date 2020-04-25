@@ -227,19 +227,19 @@ class SushiService extends DatabaseObject
 
     // get sushi report
     $response = $this->sushiTransfer($reportLayout, $serviceProvider);
-    $ext = $this->releaseNumber > 5 ? '.json' : '.xml';
+    $ext = $this->releaseNumber > 4 ? '.json' : '.xml';
 
     // Save the response
     $filename = $serviceProvider . '_' . $reportLayout . '_' . $this->startDate . '_' . $this->endDate;
     $replace = "_";
     $pattern = "/([[:alnum:]_\.-]*)/";
-    $file = BASE_DIR . 'sushistore/' . str_replace(str_split(preg_replace($pattern, $replace, $filename)), $replace, $filename) . $ext;
+    $file = BASE_DIR . 'counterstore/' . str_replace(str_split(preg_replace($pattern, $replace, $filename)), $replace, $filename) . $ext;
 
     file_put_contents($file, $response);
 
     //Test that response was saved
     if (!file_get_contents($file)) {
-      $this->logStatus("Failed trying to open file: " . $file . ".  This could be due to not having write access to the /sushistore/ directory.");
+      $this->logStatus("Failed trying to open file: " . $file . ".  This could be due to not having write access to the /counterstore/ directory.");
       $this->saveLogAndExit($reportLayout);
     }
 
@@ -674,99 +674,41 @@ class SushiService extends DatabaseObject
         }
       }
 
-      // If this is a DB1 report, we need 1 row of stats for each possible metric type
-      if ($reportLayout == 'DB1') {
-        // Get all possible metric types for the resource
-        $metricTypes = array();
-        foreach ($resource->ItemPerformance as $monthlyStat) {
-          foreach ($monthlyStat->Instance as $metricStat) {
-            $type = $metricStat->MetricType->__toString();
-            if (!in_array($type, $metricTypes)) {
-              $metricTypes[] = $type;
-            }
+      // Get all possible metric types for the resource
+      $metricTypes = array();
+      foreach ($resource->ItemPerformance as $monthlyStat) {
+        foreach ($monthlyStat->Instance as $metricStat) {
+          $type = $metricStat->MetricType->__toString();
+          if (!in_array($type, $metricTypes)) {
+            $metricTypes[] = $type;
           }
         }
+      }
 
-        $stashedRow = $row;
+      $stashedRow = $row;
 
-        foreach ($metricTypes as $type) {
-          $metricRow = $stashedRow;
-          $metricRow['activityType'] = empty($metrics[$type]) ? $type : $metrics[$type];
-          $metricRow['ytd'] = 0;
-          $metricRow['months'] = array();
-          foreach ($reportMonths as $month) {
-            $metricRow['months'][$month['columnName']] = 0;
-            foreach ($resource->ItemPerformance as $monthlyStat) {
-              if ($month['start'] == $monthlyStat->Period->Begin) {
-                foreach ($monthlyStat->Instance as $metricStat) {
-                  if ($metricStat->MetricType->__toString() == $type) {
-                    $metricRow['months'][$month['columnName']] = intval($metricStat->Count);
-                  }
-                }
-              }
-            }
-          }
-          $metricRow['ytd'] = array_reduce($metricRow['months'], function ($carry, $item) {
-            $carry += $item;
-            return $carry;
-          });
-          if ($metricRow['ytd'] > 0) {
-            $report['rows'][] = $metricRow;
-          }
-        }
-
-        // JR & BR Reports
-      } else {
-
-        $row['ytd'] = 0;
-        if ($reportLayout == 'JR1') {
-          $row['ytdPDF'] = 0;
-          $row['ytdHTML'] = 0;
-        }
+      foreach ($metricTypes as $type) {
+        $metricRow = $stashedRow;
+        $metricRow['activityType'] = empty($metrics[$type]) ? $type : $metrics[$type];
+        $metricRow['ytd'] = 0;
+        $metricRow['months'] = array();
         foreach ($reportMonths as $month) {
-          $row['months'][$month['columnName']] = array('ytd' => 0, 'ytdPDF' => 0, 'ytdHTML' => 0);
+          $metricRow['months'][$month['columnName']] = 0;
           foreach ($resource->ItemPerformance as $monthlyStat) {
             if ($month['start'] == $monthlyStat->Period->Begin) {
               foreach ($monthlyStat->Instance as $metricStat) {
-                $count = intval($metricStat->Count);
-                if ($metricStat->MetricType == 'ft_total') {
-                  $row['months'][$month['columnName']]['ytd'] = $count;
+                if ($metricStat->MetricType->__toString() == $type) {
+                  $metricRow['months'][$month['columnName']] = intval($metricStat->Count);
                 }
-                if (stripos($metricStat->MetricType, 'pdf')) {
-                  $row['months'][$month['columnName']]['ytdPDF'] = $count;
-                }
-                if (stripos($metricStat->MetricType, 'html')) {
-                  $row['months'][$month['columnName']]['ytdHTML'] = $count;
-                }
-              }
-              // This check is needed in case 'ft_total' was not in the report
-              if ($row['months'][$month['columnName']]['ytd'] == 0) {
-                $row['months'][$month['columnName']]['ytd'] = $row['months'][$month['columnName']]['ytdPDF'] + $row['months'][$month['columnName']]['ytdHTML'];
               }
             }
           }
         }
-
-        $row['ytd'] = array_reduce($row['months'], function ($carry, $item) {
-          $carry += $item['ytd'];
+        $metricRow['ytd'] = array_reduce($metricRow['months'], function ($carry, $item) {
+          $carry += $item;
           return $carry;
         });
-        if ($reportLayout == 'JR1') {
-          $row['ytdPDF'] = array_reduce($row['months'], function ($carry, $item) {
-            $carry += $item['ytdPDF'];
-            return $carry;
-          });
-          $row['ytdHTML'] = array_reduce($row['months'], function ($carry, $item) {
-            $carry += $item['ytdHTML'];
-            return $carry;
-          });
-        }
-
-        $row['months'] = array_map(function($r) {
-          return $r['ytd'];
-        }, $row['months']);
-
-        $report['rows'][] = $row;
+        $report['rows'][] = $metricRow;
       }
     }
 

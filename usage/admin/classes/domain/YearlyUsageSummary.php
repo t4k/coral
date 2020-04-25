@@ -36,10 +36,62 @@ class YearlyUsageSummary extends DatabaseObject {
 		$this->addAttribute('overrideTotalCount');
 		$this->addAttribute('overrideHTMLCount');
 		$this->addAttribute('overridePDFCount');
-        $this->addAttribute('mergeInd');
-        $this->addAttribute('activityType');
-        $this->addAttribute('sectionType');
+    $this->addAttribute('mergeInd');
+    $this->addAttribute('activityType');
+    $this->addAttribute('sectionType');
+    $this->addAttribute('accessType');
+    $this->addAttribute('accessMethod');
+    $this->addAttribute('yop');
+    $this->addAttribute('layoutID');
 	}
+
+	private function generateMatchingAttributeQuery() {
+	  $query = '';
+    foreach(array('publisherPlatformID','archiveInd','activityType','sectionType','accessTyoe','accessMethod','yop','layoutID') as $attr) {
+      $value = $this->{$attr};
+      if (!empty($value)) {
+        if(is_numeric($value)) {
+          $query .= " AND $attr = $value";
+        } else {
+          $query .= " AND $attr = '$value'";
+        }
+      } else {
+        $query .= " AND $attr IS NULL";
+      }
+    }
+  }
+
+	public function alreadyExists() {
+    $query = "SELECT yearlyUsageSummaryID FROM YearlyUsageSummary WHERE titleID = $this->titleID AND year = $this->year";
+    $query .= $this->generateMatchingAttributeQuery();
+    $query .= ' LIMIT 1';
+
+    $result = $this->db->processQuery($query, 'assoc');
+
+    //need to do this since it could be that there's only one request and this is how the dbservice returns result
+    if (isset($result['yearlyUsageSummaryID'])){
+      return $result['yearlyUsageSummaryID'];
+    }else{
+      return false;
+    }
+  }
+
+  public function getMonthCounts() {
+    $query = "SELECT usageCount FROM MonthlyUsageSummary WHERE titleID = $this->titleID AND year = $this->year";
+    $query .= $this->generateMatchingAttributeQuery();
+    $result = $this->db->processQuery($query, 'assoc');
+
+    $counts = array();
+    //need to do this since it could be that there's only one request and this is how the dbservice returns result
+    if (isset($result['usageCount'])){
+      array_push($counts, $result['usageCount']);
+    }else{
+      foreach ($result as $row) {
+        array_push($counts, $row['usageCount']);
+      }
+    }
+    return $counts;
+  }
 
 }
 
