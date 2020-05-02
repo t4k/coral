@@ -331,9 +331,8 @@ switch ($action) {
 			$obj = new Platform(new NamedArguments(array('primaryKey' => $_GET['platformID'])));
 		}
 
-
 		try {
-			$obj->deleteMonth($_GET['resourceType'], $_GET['archiveInd'], $_GET['year'], $_GET['month']);
+			$obj->deleteMonth($_GET['layoutID'], $_GET['archiveInd'], $_GET['year'], $_GET['month']);
 		} catch (Exception $e) {
 			echo $e->getMessage();
 		}

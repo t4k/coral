@@ -291,6 +291,42 @@ class PublisherPlatform extends DatabaseObject {
 
 	}
 
+	public function statOverview() {
+    $query = "SELECT
+            resourceType, year, month, archiveInd, MAX(IF(ignoreOutlierInd=0,outlierID,null))
+            outlierID, l.layoutID layoutID, l.name layoutName, l.layoutCode layoutCode
+					FROM MonthlyUsageSummary tsm
+					LEFT JOIN Layout l ON tsm.layoutID = l.layoutID
+					WHERE tsm.publisherPlatformID = '" . $this->publisherPlatformID . "'
+					GROUP BY layoutID, resourceType, year, month, archiveInd;";
+
+    $result = $this->db->processQuery(stripslashes($query), 'assoc');
+
+
+    $allArray = array();
+    $resultArray = array();
+
+    //need to do this since it could be that there's only one result and this is how the dbservice returns result
+    if (isset($result['year'])){
+
+      foreach (array_keys($result) as $attributeName) {
+        $resultArray[$attributeName] = $result[$attributeName];
+      }
+
+      array_push($allArray, $resultArray);
+    }else{
+      foreach ($result as $row) {
+        $resultArray = array();
+        foreach (array_keys($row) as $attributeName) {
+          $resultArray[$attributeName] = $row[$attributeName];
+        }
+        array_push($allArray, $resultArray);
+      }
+    }
+
+    return $allArray;
+  }
+
 
 
 	//returns array of months available for a given year
@@ -346,14 +382,14 @@ class PublisherPlatform extends DatabaseObject {
 
 
 	//remove an entire month for this publisher
-	public function deleteMonth($resourceType, $archiveInd, $year, $month){
+	public function deleteMonth($layoutID, $archiveInd, $year, $month){
 
 		//now formulate query
 		$query = "DELETE FROM MonthlyUsageSummary
 					WHERE archiveInd = '" . $archiveInd . "'
 					AND publisherPlatformID = '" . $this->publisherPlatformID . "'
 					AND year = '"  . $year . "'
-					AND titleID IN (select titleID from Title where resourceType = '"  . $resourceType . "')
+					AND layoutID = $layoutID
 					AND month = '" . $month . "';";
 
 		return $this->db->processQuery($query);

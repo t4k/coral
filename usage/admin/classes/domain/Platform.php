@@ -438,6 +438,43 @@ class Platform extends DatabaseObject {
 
 	}
 
+  public function statOverview() {
+    $query = "SELECT
+            resourceType, year, month, archiveInd, MAX(IF(ignoreOutlierInd=0,outlierID,null))
+            outlierID, l.layoutID layoutID, l.name layoutName, l.layoutCode layoutCode
+					FROM PublisherPlatform pp, MonthlyUsageSummary tsm
+					LEFT JOIN Layout l ON tsm.layoutID = l.layoutID
+					WHERE pp.platformID = '" . $this->platformID . "'
+					AND pp.publisherPlatformID = tsm.publisherPlatformID
+					GROUP BY layoutID, resourceType, year, month, archiveInd;";
+
+    $result = $this->db->processQuery(stripslashes($query), 'assoc');
+
+
+    $allArray = array();
+    $resultArray = array();
+
+    //need to do this since it could be that there's only one result and this is how the dbservice returns result
+    if (isset($result['year'])){
+
+      foreach (array_keys($result) as $attributeName) {
+        $resultArray[$attributeName] = $result[$attributeName];
+      }
+
+      array_push($allArray, $resultArray);
+    }else{
+      foreach ($result as $row) {
+        $resultArray = array();
+        foreach (array_keys($row) as $attributeName) {
+          $resultArray[$attributeName] = $row[$attributeName];
+        }
+        array_push($allArray, $resultArray);
+      }
+    }
+
+    return $allArray;
+  }
+
 
 
 
@@ -492,7 +529,7 @@ class Platform extends DatabaseObject {
 
 
 	//remove an entire month for this platform
-	public function deleteMonth($resourceType, $archiveInd, $year, $month){
+	public function deleteMonth($layoutID, $archiveInd, $year, $month){
 
 		//now formulate query
 		$query = "DELETE FROM MonthlyUsageSummary
@@ -502,7 +539,7 @@ class Platform extends DatabaseObject {
 							WHERE platformID = '" . $this->platformID . "')
 							AND year = '"  . $year . "'
 							AND month = '" . $month . "'
-							AND titleID IN (select titleID from Title where resourceType = '" . $resourceType . "')
+							AND layoutID = $layoutID
 							AND archiveInd = '" . $archiveInd . "';";
 
 		return $this->db->processQuery($query);

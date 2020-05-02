@@ -331,7 +331,8 @@ $layoutKey = $layoutsArray['ReportTypes'][$layout->layoutCode];
 $reportTypeDisplay = $layout->name;
 $resourceType = $layout->resourceType;
 $layoutCode = $layout->layoutCode;
-$layoutID = $layout->primaryKey;
+$layoutID = $layout->layoutID;
+echo '<p>Layout ID'. $layoutID;
 $release = intval(substr($layoutCode,-1));
 $columnsToCheck = $layoutsArray[$layoutKey]['columnToCheck'];
 $layoutColumns = $layoutsArray[$layoutKey]['columns'];
@@ -571,6 +572,10 @@ while (!feof($file_handle)) {
   $publicationDate = !empty($reportModel['publicationDate']) ? $reportModel['publicationDate'] : null;
   $authors = !empty($reportModel['authors']) ? $reportModel['authors'] : null;
   $articleVersion = !empty($reportModel['articleVersion']) ? $reportModel['articleVersion'] : null;
+  // If this is a Release 5 Title master report, the resource type might be book or journal
+  if($layoutCode == 'TR_R5') {
+    $resourceType == $reportModel['dataType'];
+  }
   $titleID = createOrUpdateTitle($reportModel['title'], $titleIdentifiers, $resourceType, $publisherPlatformID, $publicationDate, $authors, $articleVersion, $parentTitleID, $componentTitleID);
 
   if ($titleID) {
