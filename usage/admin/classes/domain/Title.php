@@ -27,6 +27,11 @@ class Title extends DatabaseObject {
 		$this->addAttribute('titleID');
 		$this->addAttribute('title');
 		$this->addAttribute('resourceType');
+    $this->addAttribute('publicationDate');
+    $this->addAttribute('articleVersion');
+    $this->addAttribute('authors');
+    $this->addAttribute('parentID');
+    $this->addAttribute('componentID');
 	}
 
 	//returns identifier (issn, isbn, etc) only of the first print identifier found for this title

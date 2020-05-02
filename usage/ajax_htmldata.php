@@ -658,26 +658,23 @@ switch ($action) {
 			$obj = new Platform(new NamedArguments(array('primaryKey' => $_GET['platformID'])));
 		}
 
-		$journalTitleArray = $obj->getJournalTitles;
-		$bookTitleArray = $obj->getBookTitles;
+    echo '<div>';
+    echo "<h3>" . _("Titles") . "</h3>";
 
-
-		echo "<h3>" . _("Titles") . "</h3>";
-		echo "<div style='margin-left:10px;'>";
-
-		if ((count($journalTitleArray) == '0') && (count($bookTitleArray) == '0') && (count($databaseTitleArray) == '0')){
-			echo _("(none found)");
-
-		}else{
-			if (count($journalTitleArray) > 0){
-				echo "<a href='titles_spreadsheet.php?publisherPlatformID=$publisherPlatformID&platformID=$platformID&resourceType=Journal' target='_blank'>" . _("View Journal Spreadsheet") . "</a><br />";
-			}
-
-			if (count($bookTitleArray) > 0){
-				echo "<a href='titles_spreadsheet.php?publisherPlatformID=$publisherPlatformID&platformID=$platformID&resourceType=Book' target='_blank'>" . _("View Books Spreadsheet") . "</a><br />";
-			}
-
-		}
+		foreach(array('Platform', 'Database', 'Journal', 'Book', 'Item') as $type) {
+		  echo '<h4 style="margin-top: 10px;">' . _($type . 's'). '</h4>';
+      $titles = $obj->getTitles($type);
+      $count = count($titles);
+      if ($count <= 0) {
+        echo _("(none found)");
+      } else {
+        $plural = $count > 1 ? 's' : '';
+        echo "<div><a href='titles_spreadsheet.php?publisherPlatformID=$publisherPlatformID&platformID=$platformID&resourceType=$type' target='_blank'>"
+          . _("View $type Spreadsheet")
+          . " ($count " . _("$type$plural") . ")"
+          . "</a></div>";
+      }
+    }
 		echo "</div>";
 
 		break;

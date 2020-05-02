@@ -47,7 +47,7 @@ class MonthlyUsageSummary extends DatabaseObject {
 	  $query = "SELECT monthlyUsageSummaryID FROM MonthlyUsageSummary WHERE titleID = $this->titleID AND year = $this->year"
      . " AND month = $this->month";
 
-	  foreach(array('publisherPlatformID','archiveInd','activityType','sectionType','accessTyoe','accessMethod','yop','layoutID') as $attr) {
+	  foreach(array('publisherPlatformID','archiveInd','activityType','sectionType','accessType','accessMethod','yop','layoutID') as $attr) {
 	    $value = $this->{$attr};
 	    if (!empty($value)) {
 	      if(is_numeric($value)) {

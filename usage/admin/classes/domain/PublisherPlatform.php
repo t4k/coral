@@ -100,129 +100,51 @@ class PublisherPlatform extends DatabaseObject {
 		if (isset($result['max_month'])){
 			return $result['max_month'];
 		}
-
 	}
 
-	//returns array of titles and identifiers
-	public function getJournalTitles(){
-
-		$query = "SELECT DISTINCT t.titleID titleID, t.title title,
+	public function getTitles($type) {
+    $query = "SELECT DISTINCT t.titleID titleID, t.title title,
 					MAX(IF(ti.identifierType='DOI',identifier,null)) doi,
+					MAX(IF(ti.identifierType='URI',identifier,null)) uri,
+					MAX(IF(ti.identifierType='ISBN', identifier, null)) isbn,
 					MAX(IF(ti.identifierType='Proprietary Identifier',identifier,null)) pi,
 					MAX(IF(ti.identifierType='ISSN', concat(substr(ti.identifier,1,4), '-', substr(ti.identifier,5,4)),null)) issn,
 					MAX(IF(ti.identifierType='eISSN', concat(substr(ti.identifier,1,4), '-', substr(ti.identifier,5,4)),null)) eissn
 					FROM MonthlyUsageSummary mus, Title t LEFT JOIN TitleIdentifier ti ON t.titleID = ti.titleID
 					WHERE mus.titleID = t.titleID
-					AND publisherPlatformID = '" . $this->publisherPlatformID . "'
-					AND resourceType = 'Journal'
-					GROUP BY t.titleID, t.title
-					ORDER BY title;";
+					AND publisherPlatformID = '" . $this->publisherPlatformID . "'";
 
-		$result = $this->db->processQuery($query, 'assoc');
-
-		$allArray = array();
-		$resultArray = array();
-
-		//need to do this since it could be that there's only one result and this is how the dbservice returns result
-		if (isset($result['titleID'])){
-
-			foreach (array_keys($result) as $attributeName) {
-				$resultArray[$attributeName] = $result[$attributeName];
-			}
-
-			array_push($allArray, $resultArray);
-		}else{
-			foreach ($result as $row) {
-				$resultArray = array();
-				foreach (array_keys($row) as $attributeName) {
-					$resultArray[$attributeName] = $row[$attributeName];
-				}
-				array_push($allArray, $resultArray);
-			}
-		}
-
-		return $allArray;
-	}
-	//returns array of titles and identifiers
-	public function getBookTitles(){
-
-		$query = "SELECT DISTINCT t.titleID titleID, t.title title,
-					MAX(IF(ti.identifierType='DOI', identifier, null)) doi,
-					MAX(IF(ti.identifierType='Proprietary Identifier', identifier, null)) pi,
-					MAX(IF(ti.identifierType='ISBN', identifier, null)) isbn,
-					MAX(IF(ti.identifierType='ISSN', concat(substr(ti.identifier,1,4), '-', substr(ti.identifier,5,4)),null)) issn
-					FROM MonthlyUsageSummary mus, Title t LEFT JOIN TitleIdentifier ti ON t.titleID = ti.titleID
-					WHERE mus.titleID = t.titleID
-					AND publisherPlatformID = '" . $this->publisherPlatformID . "'
-					AND resourceType = 'Book'
-					GROUP BY t.titleID, t.title
-					ORDER BY title;";
-
-		$result = $this->db->processQuery($query, 'assoc');
-
-		$allArray = array();
-		$resultArray = array();
-
-		//need to do this since it could be that there's only one result and this is how the dbservice returns result
-		if (isset($result['titleID'])){
-
-			foreach (array_keys($result) as $attributeName) {
-				$resultArray[$attributeName] = $result[$attributeName];
-			}
-
-			array_push($allArray, $resultArray);
-		}else{
-			foreach ($result as $row) {
-				$resultArray = array();
-				foreach (array_keys($row) as $attributeName) {
-					$resultArray[$attributeName] = $row[$attributeName];
-				}
-				array_push($allArray, $resultArray);
-			}
-		}
-
-		return $allArray;
-	}
+    if (!empty($type)) {
+      $query .= "AND resourceType = '$type'";
+    }
+    $query .= "GROUP BY t.titleID, t.title ORDER BY title";
 
 
+    $result = $this->db->processQuery($query, 'assoc');
 
-	//returns array of titles
-	public function getDatabaseTitles(){
+    $allArray = array();
+    $resultArray = array();
 
-		$query = "SELECT DISTINCT t.titleID titleID, t.title title
-					FROM MonthlyUsageSummary mus, Title t
-					WHERE mus.titleID = t.titleID
-					AND publisherPlatformID = '" . $this->publisherPlatformID . "'
-					AND resourceType='Database'
-					GROUP BY t.titleID, t.title
-					ORDER BY title;";
+    //need to do this since it could be that there's only one result and this is how the dbservice returns result
+    if (isset($result['titleID'])){
 
-		$result = $this->db->processQuery($query, 'assoc');
+      foreach (array_keys($result) as $attributeName) {
+        $resultArray[$attributeName] = $result[$attributeName];
+      }
 
-		$allArray = array();
-		$resultArray = array();
+      array_push($allArray, $resultArray);
+    }else{
+      foreach ($result as $row) {
+        $resultArray = array();
+        foreach (array_keys($row) as $attributeName) {
+          $resultArray[$attributeName] = $row[$attributeName];
+        }
+        array_push($allArray, $resultArray);
+      }
+    }
 
-		//need to do this since it could be that there's only one result and this is how the dbservice returns result
-		if (isset($result['titleID'])){
-
-			foreach (array_keys($result) as $attributeName) {
-				$resultArray[$attributeName] = $result[$attributeName];
-			}
-
-			array_push($allArray, $resultArray);
-		}else{
-			foreach ($result as $row) {
-				$resultArray = array();
-				foreach (array_keys($row) as $attributeName) {
-					$resultArray[$attributeName] = $row[$attributeName];
-				}
-				array_push($allArray, $resultArray);
-			}
-		}
-
-		return $allArray;
-	}
-
+    return $allArray;
+  }
 
 
 

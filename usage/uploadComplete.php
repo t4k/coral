@@ -53,8 +53,9 @@ function firstOrCreatePlatform($name) {
   // check for existing platform
   $platform = new Platform();
   $platform = $platform->getByName($name);
+  $platformID = $platform->primaryKey;
 
-  if (is_object($platform) && !empty($platform->platformID)) {
+  if (is_object($platform) && !empty($platformID)) {
     return $platform;
   } else {
     $platform = new Platform();
@@ -92,14 +93,16 @@ function firstOrCreatePublisher($counterID, $name) {
   // first check by counterID
   $publisher = new Publisher();
   $publisher = $publisher->getByCounterPublisherID($counterID);
+  $publisherID = $publisher->primaryKey;
 
   // else get by name
-  if(!is_object($publisher) || empty($publisher->publisherID)) {
+  if(!is_object($publisher) || empty($publisherID)) {
     $publisher = new Publisher();
     $publisher = $publisher->getByName($name);
+    $publisherID = $publisher->primaryKey;
   }
 
-  if (is_object($publisher) && !empty($publisher->publisherID)) {
+  if (is_object($publisher) && !empty($publisherID)) {
     return $publisher;
   } else {
     $publisher = new Publisher();
@@ -116,11 +119,12 @@ function firstOrCreatePublisher($counterID, $name) {
   }
 }
 
-function firstOrCreatePublisherPlatform($platformID, $publisherID, $publisherName, $platformName) {
+function firstOrCreatePublisherPlatform($platformID, $publisherID, $platformName, $publisherName) {
   global $logOutput;
   $publisherPlatform = new PublisherPlatform();
   $publisherPlatform = $publisherPlatform->getPublisherPlatform($publisherID, $platformID);
-  if (is_object($publisherPlatform) && !empty($publisherPlatform->publisherPlatformID)) {
+  $publisherPlatformID = $publisherPlatform->primaryKey;
+  if (is_object($publisherPlatform) && !empty($publisherPlatformID)) {
     return $publisherPlatform;
   } else {
     $publisherPlatform = new PublisherPlatform();
@@ -468,8 +472,8 @@ while (!feof($file_handle)) {
   // PLATFORM
   // Query to see if the Platform already exists, if so, get the ID
   #################################################################
-  // held platform doesn't match
-  if (!empty($holdPlatform) || $reportModel['platform'] != $holdPlatform['name']){
+  // held platform matches
+  if (!empty($holdPlatform) && $reportModel['platform'] == $holdPlatform['name']){
     $platformID = $holdPlatform['id'];
   } else {
     $platform = firstOrCreatePlatform($reportModel['platform']);
@@ -499,8 +503,8 @@ while (!feof($file_handle)) {
     $holdPublisher = null;
     $publisherID = null;
   } else {
-    //check it against the previous row - no need to do another lookup if we've already figured out the platform
-    if (!empty($holdPublisher) || ($reportModel['publisher'] != $holdPublisher['name'])){
+    //previous row matches
+    if (!empty($holdPublisher) && ($reportModel['publisher'] == $holdPublisher['name'])){
       $publisherID = $holdPublisher['id'];
     } else {
       $publisher = firstOrCreatePublisher($reportModel['counterPublisherID'], $reportModel['publisher']);
@@ -529,7 +533,7 @@ while (!feof($file_handle)) {
     if (!empty($holdPublisherPlatform) && $platformID == $holdPublisherPlatform['platformID'] && $publisherID == $holdPublisherPlatform['publisherID']){
       $publisherPlatformID = $holdPublisherPlatform['id'];
     } else {
-      $publisherPlatform = firstOrCreatePublisherPlatform($platformID, $publisherID, $reportModel['publisher'], $reportModel['platform']);
+      $publisherPlatform = firstOrCreatePublisherPlatform($platformID, $publisherID, $reportModel['platform'], $reportModel['publisher']);
       if($publisherPlatform) {
         $publisherPlatformID = $publisherPlatform->primaryKey;
         $holdPublisherPlatform = array(

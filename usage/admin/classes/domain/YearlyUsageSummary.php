@@ -47,7 +47,7 @@ class YearlyUsageSummary extends DatabaseObject {
 
 	private function generateMatchingAttributeQuery() {
 	  $query = '';
-    foreach(array('publisherPlatformID','archiveInd','activityType','sectionType','accessTyoe','accessMethod','yop','layoutID') as $attr) {
+    foreach(array('publisherPlatformID','archiveInd','activityType','sectionType','accessType','accessMethod','yop','layoutID') as $attr) {
       $value = $this->{$attr};
       if (!empty($value)) {
         if(is_numeric($value)) {
