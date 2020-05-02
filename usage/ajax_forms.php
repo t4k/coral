@@ -519,7 +519,6 @@ switch ($action) {
 				<td style='vertical-align:top;text-align:right;width:135px;'><label for='releaseNumber'><b><?php echo _("COUNTER Release:");?></b></label></td>
 				<td>
 					<select id='releaseNumber' name='releaseNumber' style='width:50px;'>
-					<option value='3' <?php if (!$sushiServiceID){ echo "selected"; } else if ($sushiService->releaseNumber == "3"){ echo "selected"; } ?>>3</option>
 					<option value='4' <?php if ($sushiService->releaseNumber == "4"){ echo "selected"; } ?>>4</option>
           <option value='5' <?php if ($sushiService->releaseNumber == "5"){ echo "selected"; } ?>>5</option>
 					</select>

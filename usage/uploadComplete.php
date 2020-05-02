@@ -49,6 +49,9 @@ function cleanValue($value) {
 }
 
 function firstOrCreatePlatform($name) {
+  if(empty($name)) {
+    return false;
+  }
   global $screenOutput;
   // check for existing platform
   $platform = new Platform();
@@ -68,7 +71,7 @@ function firstOrCreatePlatform($name) {
     try {
       $platform->save();
     } catch (Exception $e) {
-      echo $e->getMessage();
+      echo "<div>Error saving platform: " . $e->getMessage() . "</div>";
       return false;
     }
 
@@ -82,7 +85,7 @@ function firstOrCreatePlatform($name) {
       $platformNote->save();
       $screenOutput[] = _("New Platform set up: ") . $name . "   <a href='publisherPlatform.php?platformID=" . $platform->primaryKey . "'>" . _("edit") . "</a></b>";
     } catch (Exception $e) {
-      echo $e->getMessage();
+      echo "<div>Error saving platform note: " . $e->getMessage() . "</div>";
     }
     return $platform;
   }
@@ -112,7 +115,7 @@ function firstOrCreatePublisher($counterID, $name) {
     try {
       $publisher->save();
     } catch (Exception $e) {
-      echo $e->getMessage();
+      echo "<div>Error saving publisher: " . $e->getMessage() . "</div>";
       return false;
     }
     return $publisher;
@@ -138,7 +141,7 @@ function firstOrCreatePublisherPlatform($platformID, $publisherID, $platformName
       $publisherPlatform->save();
       $logOutput[] = _("New Publisher / Platform set up: ") . $publisherName . " / " . $platformName;
     } catch (Exception $e) {
-      echo $e->getMessage();
+      echo "<div>Error saving publisher platform: " . $e->getMessage() . "</div>";
       return false;
     }
     return $publisherPlatform;
@@ -173,7 +176,7 @@ function getTitleIdentifiers($reportModel, $prefix = null) {
     if(array_key_exists($key, $titleIdentifierMaps)) {
       $normalized = normalizeTitleIdentifier($value, $key);
       if (!empty($normalized)) {
-        $titleIdentifiers[$titleIdentifierMaps[$key]] = $value;
+        $titleIdentifiers[$titleIdentifierMaps[$key]] = $normalized;
       }
     }
   }
@@ -182,13 +185,13 @@ function getTitleIdentifiers($reportModel, $prefix = null) {
 
 function createOrUpdateTitle($titleName, $titleIdentifiers, $resourceType, $publisherPlatformID, $publicationDate = null, $authors = null, $articleVersion = null, $parentID = null, $componentID = null) {
 
-  $isNewTitle = false;
+  $titleID = null;
   $queryObject = new Title();
   // try to find the title via title identifiers
   foreach($titleIdentifiers as $type => $value){
     // if a title ID was found, skip
     // also skip proprietary ID, as those are not unique
-    if(!empty($titleID) || $type = 'Proprietary Identifier') {
+    if(!empty($titleID) || $type == 'Proprietary Identifier') {
       continue;
     }
     $result = $queryObject->getTitleIdByTitleIdentifier($value, $type, $resourceType);
@@ -220,7 +223,7 @@ function createOrUpdateTitle($titleName, $titleIdentifiers, $resourceType, $publ
 				$title->save();
 				$titleID = $title->primaryKey;
 			} catch (Exception $e) {
-        echo $e->getMessage();
+			  echo "<div>Error saving title: " . $e->getMessage() . "</div>";
         return false;
 			}
   }
@@ -249,7 +252,7 @@ function createOrUpdateTitle($titleName, $titleIdentifiers, $resourceType, $publ
     try {
       $titleIdentifier->save();
     } catch (Exception $e) {
-      echo $e->getMessage();
+      echo "<div>Error saving title identifier: " . $e->getMessage() . "</div>";
     }
   }
 
@@ -259,7 +262,7 @@ function createOrUpdateTitle($titleName, $titleIdentifiers, $resourceType, $publ
 }
 
 function normalizeTitleIdentifier($identifier, $identifierType) {
-  if(in_array($identifierType,array('isbn','eisbn','issn','eissn'))) {
+  if(in_array(strtolower($identifierType),array('isbn','eisbn','issn','eissn'))) {
     $identifier = strtoupper(trim(str_replace('-', '', $identifier)));
     $identifier = strtoupper(trim(str_replace(' ', '', $identifier)));
     if (strpos(strtoupper($identifier), 'N/A') !== false) {
@@ -332,7 +335,6 @@ $reportTypeDisplay = $layout->name;
 $resourceType = $layout->resourceType;
 $layoutCode = $layout->layoutCode;
 $layoutID = $layout->layoutID;
-echo '<p>Layout ID'. $layoutID;
 $release = intval(substr($layoutCode,-1));
 $columnsToCheck = $layoutsArray[$layoutKey]['columnToCheck'];
 $layoutColumns = $layoutsArray[$layoutKey]['columns'];
@@ -484,8 +486,6 @@ while (!feof($file_handle)) {
         'name' => $platform->name,
         'id' => $platform->primaryKey
       );
-      // add to output on screen
-      $screenOutput[] = '<b>' . _("New Platform set up: ") . $platform->name . "   <a href='publisherPlatform.php?platformID=" . $platformID . "'>" . _("edit") . "</a></b>";
       $platformArray[] = $platformID;
     } else {
       continue;
@@ -692,6 +692,10 @@ while (!feof($file_handle)) {
 
     // check if the stat already exists
     $alreadyExists = $monthlyUsageSummary->alreadyExists();
+    if($alreadyExists) {
+      $monthlyUsageSummary = new MonthlyUsageSummary(new NamedArguments(array('primaryKey' => $alreadyExists)));
+      $monthlyUsageSummary->usageCount = $usageCount;
+    }
 
     // if this doesn't already exist or the $overrideInd is set to 1, then save the stat
     if(!$alreadyExists || $overrideInd == 1) {
@@ -707,7 +711,7 @@ while (!feof($file_handle)) {
         }
         $yearsToUpdate[$year] = true;
       } catch (Exception $e) {
-        echo $e->getMessage();
+        echo "<div>Error saving monthly usage stat: " . $e->getMessage() . "</div>";
       }
     } else {
       $logOutput[] = _("Current or future month will not be imported: ") . $month . ": " . $usageCount;
@@ -744,9 +748,10 @@ while (!feof($file_handle)) {
     $monthlyUsageSummary->layoutID = $layoutID;
 
     $yearlyUsageSummaryID = $yearlyUsageSummary->alreadyExists();
-
-    // if it already exists, add it's id to the object for saving...otherwise a new one will be created
-    $yearlyUsageSummary->yearlyUsageSummaryID = $yearlyUsageSummaryID ? $yearlyUsageSummaryID : '';
+    $alreadyExists = $monthlyUsageSummary->alreadyExists();
+    if($alreadyExists) {
+      $yearlyUsageSummary = new YearlyUsageSummary(new NamedArguments(array('primaryKey' => $alreadyExists)));
+    }
 
     // The yearly summary is ready to be updated or created, now get the monthly totals
     // here there are three options
@@ -820,7 +825,7 @@ while (!feof($file_handle)) {
       $yearlyUsageSummary->save();
       $logOutput[] = $yearlyLogLine;
     } catch (Exception $e) {
-      echo $e->getMessage();
+      echo "<div>Error saving yearly usage summary: " . $e->getMessage() . "</div>";
     }
 
   }
@@ -867,8 +872,7 @@ if (count($emailAddresses) > 0){
 	}
 }
 
-
-$logSummary = $fileInfo['basename'] . ": $reportTypeDisplay for " . $reportModel['months'][0] . ' - ' . end($reportModel['months']);
+$logSummary = $fileInfo['basename'] . ": $reportTypeDisplay for " . $reportMonths[0] . ' - ' . end($reportMonths);
 
 include 'templates/header.php';
 
@@ -898,7 +902,7 @@ try {
 	$importLog->save();
 	$importLogID = $importLog->primaryKey;
 } catch (Exception $e) {
-	echo $e->getMessage();
+  echo "<div>Error saving import log: " . $e->getMessage() . "</div>";
 }
 
 
@@ -913,7 +917,7 @@ foreach ($platformArray AS $platformID){
 	try {
 		$importLogPlatformLink->save();
 	} catch (Exception $e) {
-		echo $e->getMessage();
+    echo "<div>Error saving import log platfomr link: " . $e->getMessage() . "</div>";
 	}
 }
 
@@ -932,7 +936,7 @@ foreach ($platformArray AS $platformID){
     <br />
     <?php echo _("Summary:") . ' ' .$rownumber . _(" titles processed.") . "<br />" . nl2br($logSummary); ?><br />
     <br />
-    <?php echo $screenOutput; ?><br />
+    <?php echo implode('<br/>',$screenOutput); ?><br />
     <p>&nbsp; </p>
 
 			</td>

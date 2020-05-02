@@ -182,11 +182,11 @@ class Title extends DatabaseObject {
 	}
 
 	public function getTitleIdByTitleIdentifier($identifier, $identifierType, $resourceType) {
-    $query = "SELECT DISTINCT ti.titleID as titleID FROM TitleIdentifier ti INNER JOIN Title t USING (titleID) WHERE identifierType = $identifierType AND identifier = '$identifier' AND t.resourceType = '$resourceType' LIMIT 1;";
+    $query = "SELECT DISTINCT ti.titleID as titleID FROM TitleIdentifier ti INNER JOIN Title t USING (titleID) WHERE identifierType = '$identifierType' AND identifier = '$identifier' AND t.resourceType = '$resourceType' LIMIT 1;";
     $result = $this->db->processQuery($query, 'assoc');
 
     //need to do this since it could be that there's only one request and this is how the dbservice returns result
-    if (isset($result['titleID'])){
+    if (!empty($result['titleID'])){
       return $result['titleID'];
     }else{
       return false;
