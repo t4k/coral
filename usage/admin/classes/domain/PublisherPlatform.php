@@ -298,7 +298,7 @@ class PublisherPlatform extends DatabaseObject {
 					FROM MonthlyUsageSummary tsm
 					LEFT JOIN Layout l ON tsm.layoutID = l.layoutID
 					WHERE tsm.publisherPlatformID = '" . $this->publisherPlatformID . "'
-					GROUP BY layoutID, resourceType, year, month, archiveInd;";
+					GROUP BY layoutID, resourceType, year, month;";
 
     $result = $this->db->processQuery(stripslashes($query), 'assoc');
 
@@ -308,6 +308,53 @@ class PublisherPlatform extends DatabaseObject {
 
     //need to do this since it could be that there's only one result and this is how the dbservice returns result
     if (isset($result['year'])){
+
+      foreach (array_keys($result) as $attributeName) {
+        $resultArray[$attributeName] = $result[$attributeName];
+      }
+
+      array_push($allArray, $resultArray);
+    }else{
+      foreach ($result as $row) {
+        $resultArray = array();
+        foreach (array_keys($row) as $attributeName) {
+          $resultArray[$attributeName] = $row[$attributeName];
+        }
+        array_push($allArray, $resultArray);
+      }
+    }
+
+    return $allArray;
+  }
+
+  //returns arrays of monthly statistics by title
+  public function getMonthlyStatsByLayout($layoutID, $year)
+  {
+
+
+    //now formulate query
+    $query = "SELECT p.name AS platform, pub.name AS publisher, pub.counterPublisherID AS counterPublisherID,
+          tsm.publisherPlatformID, tsm.year AS year, tsm.month AS month, tsm.usageCount AS usageCount, tsm.outlierID AS outlierID,
+          tsm.activityType AS activityType, tsm.sectionType AS sectionType, tsm.accessType AS accessType,
+          tsm.accessMethod AS accessMethod, tsm.yop AS yop, t.titleID AS titleID, t.title AS title, t.resourceType AS resourceType,
+          t.publicationDate AS publicationDate, t.articleVersion AS articleVersion, t.authors AS authors,
+          t.parentID AS parentID, t.componentID AS componentID
+					FROM Platform p
+					INNER JOIN PublisherPlatform pp ON p.platformID = pp.platformID
+					INNER JOIN Publisher pub ON pp.publisherID = pub.publisherID
+					INNER JOIN MonthlyUsageSummary tsm ON pp.publisherPlatformID = tsm.publisherPlatformID
+					INNER JOIN Title t ON tsm.titleID = t.titleID
+					WHERE pp.publisherPlatformID = '" . $this->publisherPlatformID . "'
+					AND tsm.year='" . $year . "'
+					AND tsm.layoutID = '".$layoutID."'";
+
+
+    $result = $this->db->processQuery(stripslashes($query), 'assoc');
+    $allArray = array();
+    $resultArray = array();
+
+    //need to do this since it could be that there's only one result and this is how the dbservice returns result
+    if (isset($result['publisherPlatformID'])){
 
       foreach (array_keys($result) as $attributeName) {
         $resultArray[$attributeName] = $result[$attributeName];

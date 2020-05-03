@@ -446,7 +446,7 @@ class Platform extends DatabaseObject {
 					LEFT JOIN Layout l ON tsm.layoutID = l.layoutID
 					WHERE pp.platformID = '" . $this->platformID . "'
 					AND pp.publisherPlatformID = tsm.publisherPlatformID
-					GROUP BY layoutID, resourceType, year, month, archiveInd;";
+					GROUP BY layoutID, resourceType, year, month";
 
     $result = $this->db->processQuery(stripslashes($query), 'assoc');
 

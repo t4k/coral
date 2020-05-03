@@ -247,7 +247,7 @@ class SushiService extends DatabaseObject
     if ($this->releaseNumber < 5) {
       $report = $this->parseXML($file, $reportLayout, $serviceProvider, $serviceProvider);
     } else {
-      $report = $this->parseJson($file, $overwritePlatform, $serviceProvider);
+      $report = $this->parseJson($file, $reportLayout, $overwritePlatform, $serviceProvider);
     }
     $this->log("Finished parsing " . $this->getServiceProvider . ": $reportLayout.");
 
@@ -715,7 +715,7 @@ class SushiService extends DatabaseObject
     return $report;
   }
 
-  private function parseJson($fName, $overwritePlatform, $serviceProvider)
+  private function parseJson($fName, $reportLayout, $overwritePlatform, $serviceProvider)
   {
 
     // Setup report months
@@ -737,12 +737,18 @@ class SushiService extends DatabaseObject
 
       $row = array();
 
-      // publisher
+      // platform
       if ($overwritePlatform) {
         $row['platform'] = $serviceProvider;
       } else {
         $row['platform'] = $resource['Platform'];
       }
+
+      // Platform reports need to have the platform as the title
+      if (preg_match("/pr/i", $reportLayout)) {
+        $row['title'] = $row['platform'];
+      }
+
 
       // all string values
       foreach (array_keys($resource) as $key) {
@@ -961,6 +967,7 @@ class SushiService extends DatabaseObject
 
   public function r5Attr($key) {
     $map = array(
+      'Database' => 'title',
       'Publisher_ID' => 'publisherID',
       'Proprietary_ID' => 'pi',
       'Proprietary' => 'pi',

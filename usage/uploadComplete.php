@@ -609,8 +609,12 @@ while (!feof($file_handle)) {
     $notNumericUsageCount = false;
 
     $splitMonth = explode('-', $month);
-    $monthID = intval(array_search($splitMonth[0], $monthIds));
+    $monthID = intval(array_search(strtolower($splitMonth[0]), $monthIds));
     $year = $splitMonth[1];
+    // try to fix year
+    if(strlen($year) == 2) {
+      $year = $year < 90 ? '20'.$year : '19'.$year;
+    }
     if (empty($monthID) || $monthID < 1 || $monthID > 12 || empty($year) || strlen($year) !== 4) {
       $logOutput[] = _("Improperly formatted month name, must be formatted as MMM-YYYY. Found ") . $month;
       continue;
