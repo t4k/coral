@@ -689,7 +689,6 @@ while (!feof($file_handle)) {
     $monthlyUsageSummary->layoutID = $layoutID;
 
 
-
     // check if the stat already exists
     $alreadyExists = $monthlyUsageSummary->alreadyExists();
     if($alreadyExists) {
@@ -730,6 +729,7 @@ while (!feof($file_handle)) {
   }
 
   foreach ($yearsToUpdate as $year => $needsToBeUpdated) {
+    echo "<div>$year</div>";
     if (!$needsToBeUpdated) {
         $logOutput[] = $year . ': '. _("No YTD import performed since monthly stats were not imported");
         continue;
@@ -742,13 +742,12 @@ while (!feof($file_handle)) {
     $yearlyUsageSummary->archiveInd = $archiveInd;
     $yearlyUsageSummary->sectionType = $sectionType;
     $yearlyUsageSummary->activityType = $yearlyActivityType;
-    $monthlyUsageSummary->accessType = $accessType;
-    $monthlyUsageSummary->accessMethod = $accessMethod;
-    $monthlyUsageSummary->yop = $yop;
-    $monthlyUsageSummary->layoutID = $layoutID;
+    $yearlyUsageSummary->accessType = $accessType;
+    $yearlyUsageSummary->accessMethod = $accessMethod;
+    $yearlyUsageSummary->yop = $yop;
+    $yearlyUsageSummary->layoutID = $layoutID;
 
-    $yearlyUsageSummaryID = $yearlyUsageSummary->alreadyExists();
-    $alreadyExists = $monthlyUsageSummary->alreadyExists();
+    $alreadyExists = $yearlyUsageSummary->alreadyExists();
     if($alreadyExists) {
       $yearlyUsageSummary = new YearlyUsageSummary(new NamedArguments(array('primaryKey' => $alreadyExists)));
     }

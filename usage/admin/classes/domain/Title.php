@@ -149,10 +149,12 @@ class Title extends DatabaseObject {
 		if ($activityType){
 			$addWhere=" AND activityType='" . $activityType . "'";
 		}
+    if ($archiveInd){
+      $addWhere=" AND archiveInd='" . $archiveInd . "'";
+    }
 		$query = "SELECT titleID, totalCount, ytdHTMLCount, ytdPDFCount
 					FROM YearlyUsageSummary
 					WHERE titleID = '" . $this->titleID . "'
-					AND archiveInd ='" . $archiveInd . "'
 					AND year='" . $year . "'" . $addWhere . "
 					AND publisherPlatformID = '" . $publisherPlatformID . "';";
 

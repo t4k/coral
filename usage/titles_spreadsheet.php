@@ -18,7 +18,7 @@ if (isset($_GET['publisherPlatformID']) && ($_GET['publisherPlatformID'] != ''))
 
 $display_name = $obj->reportDisplayName;
 
-$pageTitle = $display_name . "_" . $resourceType . "_Titles";
+$pageTitle = $display_name . " " . $resourceType . " " ._("Titles");
 if($download) {
   $excelfile = str_replace (' ','_',$pageTitle) . '.xls';
   header("Content-type: application/vnd.ms-excel");
@@ -91,7 +91,7 @@ switch ($resourceType) {
 <?php endif; ?>
 
 
-<h2><?php echo $display_name . " " . $resourceType . _(" Titles ");?></h2>
+<h2><?php echo $pageTitle;?></h2>
 <?php if(empty($download)): ?>
 <a href="<?php echo $_SERVER['REQUEST_URI']. '&download=true'; ?>">Download</a>
 <?php endif; ?>
