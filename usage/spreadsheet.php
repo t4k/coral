@@ -69,22 +69,6 @@ if($download) {
 $itemReport = in_array($layoutCode, array('IR_R5','IR_A1_R5','IR_M1_R5'));
 $monthlyStats = $obj->getMonthlyStatsByLayout($layoutID, $year);
 
-// can create a map from the columns to check and columns of layout.ini
-/*
-$headers = array();
-foreach($layoutColumns as $index => $value) {
-  $attrMap[$value] = $columnsToCheck[$index];
-}
-*/
-
-// totals
-/*
-$monthCounts = array();
-foreach(range(1,12) as $m) {
-  $monthCounts[$m] = 0;
-}
-*/
-
 function getTitleIdentifiers($titleID) {
   $lookupIdentifiers = new Title(new NamedArguments(array('primaryKey' => $titleID)));
   $titleIdentifiers = $lookupIdentifiers->getIdentifiers();
@@ -104,7 +88,12 @@ foreach($monthlyStats as $stat) {
   // title, but with different access, section, and activity types
   $rowKey = $stat['sectionType'].$stat['accessMethod'].$stat['accessType'].$stat['yop'];
   // R4 JR reports are not separated by activity type
-  if (!in_array($layoutCode, array('JR1_R4', 'JR1a_R4'))) {
+  if (in_array($layoutCode, array('JR1_R4', 'JR1a_R4'))) {
+    // and we only want the ft_total
+    if (in_array($stat['activityType'],array('ft_html','ft_pdf'))) {
+      continue;
+    }
+  } else {
     $rowKey .= $stat['activityType'];
   }
 
@@ -142,7 +131,7 @@ foreach($monthlyStats as $stat) {
     } else {
       $rows[$stat['titleID']][$rowKey] = array(
         'titleInfo' => $stat,
-        $months = array(
+        'months' => array(
           $stat['month'] => $stat['usageCount']
         )
       );
@@ -151,7 +140,7 @@ foreach($monthlyStats as $stat) {
     $rows[$stat['titleID']] = array(
       $rowKey => array (
         'titleInfo' => $stat,
-        $months = array(
+        'months' => array(
           $stat['month'] => $stat['usageCount']
         )
       )
@@ -168,7 +157,6 @@ uasort($rows, function($a, $b) {
   }
   return $aCompare > $bCompare ? 1 : -1;
 });
-
 ?>
 
 <?php if($download): ?>
@@ -177,7 +165,20 @@ uasort($rows, function($a, $b) {
 </head>
 <body>
 <?php else: ?>
-  <?php include 'templates/header.php'; ?>
+<?php include 'templates/header.php'; ?>
+<style>
+table {
+  position: relative;
+}
+table.dataTable th {
+  position: sticky;
+  top: 0;
+  background: rgba(200, 200, 200, 1) !important;
+}
+table.dataTable th:first-child {
+  min-width: 300px;
+}
+</style>
 <?php endif; ?>
 
 
@@ -186,8 +187,11 @@ uasort($rows, function($a, $b) {
   <a href="<?php echo $_SERVER['REQUEST_URI']. '&download=true'; ?>">Download</a>
 <?php endif; ?>
 
-
+<?php if($download): ?>
 <table border='1'>
+<?php else: ?>
+<table class="dataTable fixed_headers">
+<?php endif; ?>
   <tr>
     <?php foreach ($columnsToCheck as $column): ?>
       <th><?php echo _($column); ?></th>
@@ -209,7 +213,7 @@ uasort($rows, function($a, $b) {
             <?php
               $total = 0;
               foreach($data['months'] as $month => $count) {
-                $total += $count['usageCount'];
+                $total += $count;
               }
               echo '<td>'.$total.'</td>';
             ?>
@@ -233,8 +237,8 @@ uasort($rows, function($a, $b) {
       </tr>
     <?php endforeach; ?>
   <?php endforeach; ?>
-<?php if($download): ?>
 </table>
+<?php if($download): ?>
 </body>
 </html>
 <?php else: ?>

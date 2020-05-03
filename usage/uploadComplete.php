@@ -729,7 +729,6 @@ while (!feof($file_handle)) {
   }
 
   foreach ($yearsToUpdate as $year => $needsToBeUpdated) {
-    echo "<div>$year</div>";
     if (!$needsToBeUpdated) {
         $logOutput[] = $year . ': '. _("No YTD import performed since monthly stats were not imported");
         continue;
