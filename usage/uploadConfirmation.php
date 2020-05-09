@@ -179,6 +179,19 @@ include 'templates/header.php';
 		document.confirmForm.submit();
 	}
 </script>
+<style>
+  table {
+    position: relative;
+  }
+  table.dataTable th {
+    position: sticky;
+    top: 0;
+    background: rgba(200, 200, 200, 1) !important;
+  }
+  table.dataTable th:first-child {
+    min-width: 300px;
+  }
+</style>
 
 
 
