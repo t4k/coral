@@ -99,6 +99,12 @@ function firstOrCreatePublisher($counterID, $name) {
 
   // else get by name
   if(!is_object($publisher) || empty($publisherID)) {
+
+    // if name is blank or Undefined, skip
+    if(empty($name) || strtolower($name) == 'undefined') {
+      return false;
+    }
+
     $publisher = new Publisher();
     $searchName = trim(str_replace ("'","''",$name));
     $publisher = $publisher->getByName($searchName);
