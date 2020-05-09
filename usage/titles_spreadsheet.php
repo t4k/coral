@@ -113,11 +113,7 @@ switch ($resourceType) {
 <?php foreach($titleArray as $title): ?>
   <tr>
     <?php foreach ($columns as $column): ?>
-      <?php if($column['key'] == 'title'): ?>
-        <td><?php echo str_replace("''", "'", $title[$column['key']]); ?></td>
-      <?php else: ?>
-        <td><?php echo $title[$column['key']]; ?></td>
-      <?php endif; ?>
+      <td><?php echo $title[$column['key']]; ?></td>
     <?php endforeach; ?>
     <?php
       if($resourceType == 'Item') {

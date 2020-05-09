@@ -34,8 +34,6 @@ function cleanValue($value) {
   }
   //remove " quotes
   $value = str_replace("\"","",$value);
-  // escape single quotes
-  $value = trim(str_replace ("'","''",$value));
   // remove any html encodings like &amp;
   $value = html_entity_decode($value);
 
@@ -55,7 +53,8 @@ function firstOrCreatePlatform($name) {
   global $screenOutput;
   // check for existing platform
   $platform = new Platform();
-  $platform = $platform->getByName($name);
+  $searchName = trim(str_replace ("'","''",$name));
+  $platform = $platform->getByName($searchName);
   $platformID = $platform->primaryKey;
 
   if (is_object($platform) && !empty($platformID)) {
@@ -101,7 +100,8 @@ function firstOrCreatePublisher($counterID, $name) {
   // else get by name
   if(!is_object($publisher) || empty($publisherID)) {
     $publisher = new Publisher();
-    $publisher = $publisher->getByName($name);
+    $searchName = trim(str_replace ("'","''",$name));
+    $publisher = $publisher->getByName($searchName);
     $publisherID = $publisher->primaryKey;
   }
 
@@ -199,12 +199,12 @@ function createOrUpdateTitle($titleName, $titleIdentifiers, $resourceType, $publ
       $titleID = $result;
     }
   }
-
   // try to find the title via name, type, and publisherplatform
   // ultimate, this query ensures that two titles with the same name (but different publisherPlatforms) are seen as different titles
   // because they lack any other identifiers
   if(empty($titleID)) {
-		$titleID = $queryObject->getByTitle($resourceType, $titleName, $publisherPlatformID, $publicationDate, $authors, $articleVersion, $parentID, $componentID);
+    $searchName = trim(str_replace ("'","''",$titleName));
+		$titleID = $queryObject->getByTitle($resourceType, $searchName, $publisherPlatformID, $publicationDate, $authors, $articleVersion, $parentID, $componentID);
   }
 
   // if there is still no title, need to add one

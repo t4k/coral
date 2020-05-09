@@ -218,11 +218,7 @@ table.dataTable th:first-child {
               echo '<td>'.$total.'</td>';
             ?>
           <?php else: ?>
-            <?php if($columnKey == 'title'): ?>
-              <td><?php echo str_replace("''", "'", $data['titleInfo'][$columnKey]); ?></td>
-            <?php else: ?>
-              <td><?php echo $data['titleInfo'][$columnKey]; ?></td>
-            <?php endif; ?>
+            <td><?php echo $data['titleInfo'][$columnKey]; ?></td>
           <?php endif; ?>
         <?php endforeach; ?>
         <?php
