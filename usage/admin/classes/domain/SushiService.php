@@ -333,8 +333,22 @@ class SushiService extends DatabaseObject
     );
 
     if ($this->requestorID) {
-      $key = empty($this->requestorKey) ? 'requestor_id' : $this->requestorKey;
-      $params[$key] = $this->requestorID;
+      $params['requestor_id'] = $this->requestorID;
+    }
+
+    if ($this->apiKey) {
+      $params['api_key'] = $this->apiKey;
+    }
+
+    // If a master report, need to add 'attributes_to_show'
+    if (in_array($reportLayout,['PR','DR','TR','IR'])) {
+      $params['attributes_to_show'] = 'Data_Type|Access_Method';
+      if ($reportLayout == 'TR') {
+        $params['attributes_to_show'] .= '|Access_Type|Section_Type|YOP';
+      }
+      if ($reportLayout == 'IR') {
+        $params['attributes_to_show'] .= '|Access_Type|YOP|Publication_Date|Authors|Article_Version';
+      }
     }
 
     // setup curl client
