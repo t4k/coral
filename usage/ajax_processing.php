@@ -593,6 +593,22 @@ switch ($action) {
 
 		break;
 
+  case 'updatePlatform':
+
+    $platformID = $_POST['platformID'];
+    if (!empty($platformID)) {
+      $obj = new Platform(new NamedArguments(array('primaryKey' => $platformID)));
+      $obj->name = $_POST['platformName'];
+      try {
+        $obj->save();
+      } catch (Exception $e) {
+        echo $e->getMessage();
+      }
+    }
+
+
+    break;
+
 
 	default:
        echo _("Function ") . $_REQUEST['function'] . _(" not set up!");

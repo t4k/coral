@@ -1039,6 +1039,40 @@ switch ($action) {
 
 		break;
 
+  case 'getUpdatePlatformForm':
+    $platformID = $_GET['platformID'];
+    $obj = new Platform(new NamedArguments(array('primaryKey' => $_GET['platformID'])));
+
+    ?>
+    <div id='div_updateForm'>
+      <input type='hidden' id='platformID' name='platformID' value='<?php echo $platformID; ?>'>
+      <table class="thickboxTable" style="width:500px;padding:2px;">
+        <tr>
+          <td style='vertical-align:top;text-align:right;width:135px;'><label for='platformName'><b><?php echo _("Platform Name:");?></b></label></td>
+          <td><input type='text' id='platformName' name='platformName' value="<?php echo $obj->name; ?>" style='width:330px;' />
+        </tr>
+        <tr style="vertical-align:middle;">
+          <td style="padding-top:8px;text-align:right;">&nbsp;</td>
+          <td style="padding-top:8px;padding-right:8px;">
+            <table class='noBorderTable' style='width:100%;'>
+              <tr>
+                <td style="width:60px;"><input type='button' value='<?php echo _("submit");?>' name='updatePlatformFrom' id ='updatePlatformForm' class='submit-button'></td>
+                <td><input type='button' value='<?php echo _("cancel");?>' onclick="tb_remove()" id='cancel-button' class='cancel-button'></td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+      </table>
+
+    </div>
+
+    <script type="text/javascript" src="js/forms/platformUpdateForm.js?random=<?php echo rand(); ?>"></script>
+
+    <?php
+
+    break;
+
 
 
 
