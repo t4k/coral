@@ -189,12 +189,22 @@ class SushiService extends DatabaseObject
     $this->setImportDates($sDate, $eDate);
 
     $serviceProvider = $this->getServiceProvider();
+    $errors = [];
     foreach ($rlArray as $reportLayout) {
-       $this->sushiTransfer($reportLayout, $serviceProvider);
+      try {
+        $this->sushiTransfer($reportLayout, $serviceProvider);
+      } catch(Exception $e) {
+        $errors[$reportLayout] = $e->getMessage();
+      }
     }
 
     if ($reportLayouts == "") {
       echo _("At least one report type must be set up!");
+    } elseif (!empty($errors)) {
+      foreach($errors as $rl => $er) {
+        echo '<h3> Report '.$rl.'</h3>';
+        echo '<p>'.$er.'</p>';
+      }
     } else {
       echo _("Connection test successful!");
     }
