@@ -157,89 +157,88 @@ uasort($rows, function($a, $b) {
   }
   return $aCompare > $bCompare ? 1 : -1;
 });
-?>
 
-<?php if($download): ?>
-<html>
-<head>
-</head>
-<body>
-<?php else: ?>
-<?php include 'templates/header.php'; ?>
-<style>
-table {
-  position: relative;
-}
-table.dataTable th {
-  position: sticky;
-  top: 0;
-  background: rgba(200, 200, 200, 1) !important;
-}
-table.dataTable th:first-child {
-  min-width: 300px;
-}
-</style>
-<?php endif; ?>
+$headers = array();
+$report = array();
 
-<?php if(empty($download)): ?>
-<h2><?php echo $pageTitle;?></h2>
-<a href="<?php echo $_SERVER['REQUEST_URI']. '&download=true'; ?>">Download</a>
-<?php endif; ?>
+foreach ($columnsToCheck as $column) {
+  $headers[] = _($column);
+}
+foreach(range(1,12) as $monthInt) {
+  $headers[] = numberToMonth($monthInt) . '-' . $year;
+}
 
-<?php if($download): ?>
-<table border='1'>
-<?php else: ?>
-<table class="dataTable fixed_headers">
-<?php endif; ?>
-  <tr>
-    <?php foreach ($columnsToCheck as $column): ?>
-      <th><?php echo _($column); ?></th>
-    <?php endforeach; ?>
-    <?php foreach(range(1,12) as $monthInt): ?>
-      <th><?php echo numberToMonth($monthInt) . '-' . $year; ?></th>
-    <?php endforeach; ?>
-  </tr>
-  <?php foreach($rows as $titleID => $subRow): ?>
-    <?php foreach($subRow as $rowKey => $data): ?>
-      <tr>
-        <?php foreach($layoutColumns as $columnKey): ?>
-          <?php
-            if (in_array($layoutCode, array('JR1_R4', 'JR1a_R4')) && $columnKey == 'activityType') {
-              continue;
-            }
-          ?>
-          <?php if($columnKey == 'ytd'): ?>
-            <?php
-              $total = 0;
-              foreach($data['months'] as $month => $count) {
-                $total += $count;
-              }
-              echo '<td>'.$total.'</td>';
-            ?>
-          <?php else: ?>
-            <td><?php echo $data['titleInfo'][$columnKey]; ?></td>
-          <?php endif; ?>
-        <?php endforeach; ?>
-        <?php
-          // JR reports need the ytdPDF and ytdHTML from yearlyUsageSummary
-          if (in_array($layoutCode, array('JR1_R4', 'JR1a_R4'))) {
-            $pdfHtmlCounts = new Title(new NamedArguments(array('primaryKey' => $titleID)));
-            $ytdCounts = $pdfHtmlCounts->getYearlyStats(null, $year, $data['titleInfo']['publisherPlatformID'], null);
-            $ytdCounts = $ytdCounts[0];
-            echo '<td>'.$ytdCounts['ytdHTMLCount'].'</td>';
-            echo '<td>'.$ytdCounts['ytdPDFCount'].'</td>';
-          }
-        ?>
-        <?php foreach(range(1,12) as $monthInt): ?>
-          <td><?php echo empty($data['months'][$monthInt]) ? '' : $data['months'][$monthInt] ?></td>
-        <?php endforeach; ?>
-      </tr>
-    <?php endforeach; ?>
-  <?php endforeach; ?>
-</table>
-<?php if($download): ?>
-</body>
-</html>
-<?php else: ?>
-  <?php include 'templates/footer.php'; ?>
-<?php endif; ?>
+foreach($rows as $titleID => $subRow) {
+  foreach($subRow as $rowKey => $data) {
+    $report[$titleID.$rowKey] = array();
+    foreach($layoutColumns as $columnKey) {
+      if (in_array($layoutCode, array('JR1_R4', 'JR1a_R4')) && $columnKey == 'activityType') {
+        continue;
+      }
+      if($columnKey == 'ytd') {
+        $total = 0;
+        foreach($data['months'] as $month => $count) {
+          $total += $count;
+        }
+        $report[$titleID.$rowKey][] = $total;
+      } else {
+        $report[$titleID.$rowKey][] = $data['titleInfo'][$columnKey];
+      }
+    }
+    // JR reports need the ytdPDF and ytdHTML from yearlyUsageSummary
+    if (in_array($layoutCode, array('JR1_R4', 'JR1a_R4'))) {
+      $pdfHtmlCounts = new Title(new NamedArguments(array('primaryKey' => $titleID)));
+      $ytdCounts = $pdfHtmlCounts->getYearlyStats(null, $year, $data['titleInfo']['publisherPlatformID'], null);
+      $ytdCounts = $ytdCounts[0];
+      $report[$titleID.$rowKey][] = $ytdCounts['ytdHTMLCount'];
+      $report[$titleID.$rowKey][] = $ytdCounts['ytdPDFCount'];
+    }
+    foreach(range(1,12) as $monthInt) {
+      $report[$titleID.$rowKey][] = empty($data['months'][$monthInt]) ? '' : $data['months'][$monthInt];
+    }
+  }
+}
+
+if ($download) {
+  if ($download === 'csv') {
+    // CSV for download
+    $filename = str_replace(' ', '_', $pageTitle) . '.csv';
+    header('Content-Type: text/csv; charset=utf-8');
+    header("Content-Disposition: attachment; filename=$filename");
+    $output = fopen('php://output', 'w');
+    fputcsv($output, $headers);
+    foreach ($report as $row) {
+      fputcsv($output, $row);
+    }
+  }
+  if ($download === 'tsv') {
+    $filename = str_replace (' ','_',$pageTitle) . '.tsv';
+    header('Content-type: text/tab-separated-values');
+    header("Content-Disposition: attachment;filename=$filename");
+    echo implode("\t", $headers);
+    echo "\n";
+    foreach($report as $row) {
+      echo implode("\t", $row) . "\n";
+    }
+  }
+} else  {
+  include 'templates/header.php';
+  echo "<style>";
+  echo "table { position: relative; }";
+  echo "table.dataTable th { position: sticky; top: 0; background: rgba(200, 200, 200, 1) !important;}";
+  echo "table.dataTable th:first-child { min-width: 300px; }";
+  echo "</style>";
+  echo "<h2>$pageTitle</h2>";
+  echo '<a href="' . $_SERVER['REQUEST_URI'] . '&download=tsv">Download TSV</a>';
+  echo '<a href="' . $_SERVER['REQUEST_URI'] . '&download=csv" style="margin-left: 10px;">Download CSV</a>';
+  echo '<table class="dataTable fixed_headers"><tr><th>';
+  echo implode("</th><th>", $headers);
+  echo '</th></tr>';
+  foreach($report as $row) {
+    echo '<tr><td>' . implode('</td><td>', $row) . "</td></tr>";
+  }
+  echo '</table>';
+  include 'templates/footer.php';
+}
+
+
