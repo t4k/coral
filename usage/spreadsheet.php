@@ -181,10 +181,9 @@ table.dataTable th:first-child {
 </style>
 <?php endif; ?>
 
-
-<h2><?php echo $pageTitle;?></h2>
 <?php if(empty($download)): ?>
-  <a href="<?php echo $_SERVER['REQUEST_URI']. '&download=true'; ?>">Download</a>
+<h2><?php echo $pageTitle;?></h2>
+<a href="<?php echo $_SERVER['REQUEST_URI']. '&download=true'; ?>">Download</a>
 <?php endif; ?>
 
 <?php if($download): ?>

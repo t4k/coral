@@ -91,8 +91,8 @@ switch ($resourceType) {
 <?php endif; ?>
 
 
-<h2><?php echo $pageTitle;?></h2>
 <?php if(empty($download)): ?>
+<h2><?php echo $pageTitle;?></h2>
 <a href="<?php echo $_SERVER['REQUEST_URI']. '&download=true'; ?>">Download</a>
 <?php endif; ?>
 
