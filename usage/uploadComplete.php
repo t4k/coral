@@ -887,7 +887,7 @@ if ($importLogID != ""){
 	$importLog = new ImportLog(new NamedArguments(array('primaryKey' => $importLogID)));
 	$importLog->fileName = $importLog->fileName;
 	$importLog->archiveFileURL = $importLog->fileName;
-	$importLog->details = $importLog->details . "\n" . $rownumber . _(" titles processed.") . $logSummary;
+	$importLog->details = $importLog->details . "\n" . $rownumber . _(" rows processed.") . $logSummary;
 	$archvieFileName = $importLog->fileName;
 }else{
   // copy the uploaded file to the archive
@@ -897,7 +897,7 @@ if ($importLogID != ""){
 	$importLog->importLogID = '';
 	$importLog->fileName = $fileInfo['basename'];
 	$importLog->archiveFileURL = $archvieFileName;
-	$importLog->details = $rownumber . _(" titles processed.") . $logSummary;
+	$importLog->details = $rownumber . _(" rows processed.") . $logSummary;
 }
 
 $importLog->loginID = $user->loginID;
@@ -940,7 +940,7 @@ foreach ($platformArray AS $platformID){
     <p><?php echo _("Log file available at:");?> <a href='<?php echo $Base_URL . $logfile; ?>'><?php echo $Base_URL . $logfile; ?></a>.</p>
     <p><?php echo _("Process completed.") . " " . $mailOutput; ?></p>
     <br />
-    <?php echo _("Summary:") . ' ' .$rownumber . _(" titles processed.") . "<br />" . nl2br($logSummary); ?><br />
+    <?php echo _("Summary:") . ' ' .$rownumber . _(" rows processed.") . "<br />" . nl2br($logSummary); ?><br />
     <br />
     <?php echo implode('<br/>',$screenOutput); ?><br />
     <p>&nbsp; </p>
