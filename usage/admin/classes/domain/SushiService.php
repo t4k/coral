@@ -774,6 +774,10 @@ class SushiService extends DatabaseObject
         $row['title'] = $row['platform'];
       }
 
+      // Publisher ID
+      if (is_array($resource['Publisher_ID']) && count($resource['Publisher_ID'] > 0)) {
+        $row['publisherID'] = strtolower($resource['Publisher_ID'][0]['Type']) . '=' . $resource['Publisher_ID'][0]['Value'];
+      }
 
       // all string values
       foreach (array_keys($resource) as $key) {
@@ -993,7 +997,6 @@ class SushiService extends DatabaseObject
   public function r5Attr($key) {
     $map = array(
       'Database' => 'title',
-      'Publisher_ID' => 'publisherID',
       'Proprietary_ID' => 'pi',
       'Proprietary' => 'pi',
       'Data_Type' => 'dataType',
