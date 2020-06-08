@@ -846,9 +846,7 @@ $fileInfo = pathinfo($file);
 
 #Save log output on server
 $logfile = 'logs/' . date('Ymdhi') . '.php';
-$excelfile = 'logs/' . date('Ymdhi') . '.xls';
 $fp = fopen($logfile, 'w');
-fwrite($fp, "<?php header(\"Content-type: application/vnd.ms-excel\");\nheader(\"Content-Disposition: attachment; filename=" . $excelfile . "\"); ?>");
 fwrite($fp, "<html><head></head><body>");
 fwrite($fp, implode('<br/>', $logOutput));
 fwrite($fp, "</body></html>");
@@ -939,7 +937,7 @@ foreach ($platformArray AS $platformID){
 <div class="headerText"><?php echo _("Status");?></div>
 	<br />
     <p><?php echo _("File archived as") . ' ' . $Base_URL . $archvieFileName; ?>.</p>
-    <p><?php echo _("Log file available at:");?> <a href='<?php echo $Base_URL . $logfile; ?>'><?php echo $Base_URL . $excelfile; ?></a>.</p>
+    <p><?php echo _("Log file available at:");?> <a href='<?php echo $Base_URL . $logfile; ?>'><?php echo $Base_URL . $logfile; ?></a>.</p>
     <p><?php echo _("Process completed.") . " " . $mailOutput; ?></p>
     <br />
     <?php echo _("Summary:") . ' ' .$rownumber . _(" titles processed.") . "<br />" . nl2br($logSummary); ?><br />
