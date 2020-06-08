@@ -226,6 +226,7 @@ class SushiService extends DatabaseObject
     $serviceProvider = $this->getServiceProvider();
     foreach ($rlArray as $reportLayout) {
       $detailsForOutput = $this->run($reportLayout, $serviceProvider, $overwritePlatform);
+      sleep(3);
     }
 
     return implode("\n", $detailsForOutput);
