@@ -845,7 +845,7 @@ fclose($file_handle);
 $fileInfo = pathinfo($file);
 
 #Save log output on server
-$logfile = 'logs/' . date('Ymdhi') . '.php';
+$logfile = 'logs/' . date('Ymdhis') . '.php';
 $fp = fopen($logfile, 'w');
 fwrite($fp, "<html><head></head><body>");
 fwrite($fp, implode('<br/>', $logOutput));
