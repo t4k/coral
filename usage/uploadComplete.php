@@ -440,7 +440,7 @@ if ($release == 5) {
     $baseReportModel['accessType'] = 'Controlled';
   }
   if(in_array($layoutCode, $accessMethodRegularLayouts)){
-    $baseReportModel['accessType'] = 'Regular';
+    $baseReportModel['accessMethod'] = 'Regular';
   }
   if($layoutCode == 'IR_A1_R5') {
     $baseReportModel['sectionType'] = 'Article';
