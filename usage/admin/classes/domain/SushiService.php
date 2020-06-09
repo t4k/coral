@@ -399,9 +399,45 @@ class SushiService extends DatabaseObject
       $this->saveLogAndExit($reportLayout);
     }
 
-    if (!empty($json->Severity)) {
+    // If there is an error, the model will have Code and Message in the top level
+    if (!empty($json->Code) && !(empty($json->Message))) {
       $this->logStatus("Received an error from $serviceProvider: $json->Message");
       $this->saveLogAndExit($reportLayout);
+    }
+
+    // Also check for report exceptions
+    if (!empty($json->Report_Header->Exceptions)) {
+
+      //https://www.projectcounter.org/appendix-f-handling-errors-exceptions/
+      $reportFatalCodes = array(1000, 1010, 1020, 1030);
+      $reportErrorCodes = array(2000, 2010, 2020, 3000, 3010, 3020, 3030);
+      $errorsOrFatalCount = 0;
+      foreach($json->Report_Header->Exceptions as $exception) {
+        $aAn = 'a';
+        if (in_array($exception->Code, $reportFatalCodes)) {
+          $errorKey = 'fatal';
+          $errorsOrFatalCount += 1;
+        } elseif (in_array($exception->Code, $reportErrorCodes)) {
+          $errorKey = 'error';
+          $aAn = 'an';
+          $errorsOrFatalCount += 1;
+        } else {
+          $errorKey = 'warning';
+        }
+        $message = "Received $aAn $errorKey message from $serviceProvider: $exception->Message";
+        if (!empty($exception->Data)) {
+          $message .= " Additional Data: $exception->Data";
+        }
+        if (!empty($exception->Help_URL)) {
+          $message .= " Help Url: $exception->Help_URL";
+        }
+        $this->log($message);
+      }
+      if ($errorsOrFatalCount > 0) {
+        $this->logStatus($this->logStatus("Received $errorsOrFatalCount errors from $serviceProvider. Details can be found in the log."));
+        $this->saveLogAndExit($reportLayout);
+      }
+
     }
 
     $this->log("$reportLayout successfully retrieved from $serviceProvider for start date:  $this->startDate, end date: $this->endDate");
