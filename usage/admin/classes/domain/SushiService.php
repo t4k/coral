@@ -362,6 +362,12 @@ class SushiService extends DatabaseObject
       }
     }
 
+    // If an IR or IR_A1 report get the parent and component details
+    if (in_array($reportLayout, ['IR', 'IR_A1'])) {
+      $params['include_component_details'] = true;
+      $params['include_parent_details'] = true;
+    }
+
     // setup curl client
     $trailingSlash = substr($this->serviceURL, -1) == '/' ? '' : '/';
     $endpoint = $this->serviceURL . $trailingSlash . 'reports/' . strtolower($reportLayout) . '?' . http_build_query($params);
