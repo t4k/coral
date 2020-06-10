@@ -55,7 +55,7 @@ if ($fromSushi) {
   $layout->getByLayoutCode($importLog->layoutCode);
 
   // read file
-  $file_handle = $util->utf8_fopen_read($importLog->fileName, false);
+  $file_handle = $util->utf8_fopen_read($importLog->fileName, true);
 
   // page values
   $page['title'] = _('SUSHI Import Confirmation');
