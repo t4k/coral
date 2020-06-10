@@ -477,6 +477,12 @@ while (!feof($file_handle)) {
     }
   }
 
+  // IF a platform report, the "title" is the platform
+  if ($release == 5 && ($layoutCode == 'PR_R5' || $layoutCode == 'PR_P1_R5')) {
+    $reportModel['platform'] = $reportModel['title'];
+    $reportModel['publisher'] = $reportModel['title'];
+  }
+
   ################################################################
   // PLATFORM
   // Query to see if the Platform already exists, if so, get the ID
@@ -505,25 +511,19 @@ while (!feof($file_handle)) {
   // Query to see if the Publisher already exists, if so, get the ID
   #################################################################
 
-  // skips this if the report is a release 5 platform report
-  if ($release == 5 && ($layoutCode == 'PR_R5' || $layoutCode == 'PR_P1_R5')) {
-    $holdPublisher = null;
-    $publisherID = null;
+  //previous row matches
+  if (!empty($holdPublisher) && ($reportModel['publisher'] == $holdPublisher['name'])){
+    $publisherID = $holdPublisher['id'];
   } else {
-    //previous row matches
-    if (!empty($holdPublisher) && ($reportModel['publisher'] == $holdPublisher['name'])){
-      $publisherID = $holdPublisher['id'];
+    $publisher = firstOrCreatePublisher($reportModel['counterPublisherID'], $reportModel['publisher']);
+    if($publisher) {
+      $publisherID = $publisher->primaryKey;
+      $holdPublisher = array(
+        'name' => $publisher->name,
+        'id' => $publisher->primaryKey
+      );
     } else {
-      $publisher = firstOrCreatePublisher($reportModel['counterPublisherID'], $reportModel['publisher']);
-      if($publisher) {
-        $publisherID = $publisher->primaryKey;
-        $holdPublisher = array(
-          'name' => $publisher->name,
-          'id' => $publisher->primaryKey
-        );
-      } else {
-        continue;
-      }
+      continue;
     }
   }
 
@@ -532,27 +532,21 @@ while (!feof($file_handle)) {
   // Query to see if the Publisher / Platform already exists, if so, get the ID
   #################################################################
   //get the publisher platform object
-  // skips this if the report is a release 5 platform report
-  if ($release == 5 && ($layoutCode == 'PR_R5' || $layoutCode == 'PR_P1_R5')) {
-    $holdPublisherPlatform = null;
-    $publisherPlatformID = null;
+  if (!empty($holdPublisherPlatform) && $platformID == $holdPublisherPlatform['platformID'] && $publisherID == $holdPublisherPlatform['publisherID']){
+    $publisherPlatformID = $holdPublisherPlatform['id'];
   } else {
-    if (!empty($holdPublisherPlatform) && $platformID == $holdPublisherPlatform['platformID'] && $publisherID == $holdPublisherPlatform['publisherID']){
-      $publisherPlatformID = $holdPublisherPlatform['id'];
+    $publisherPlatform = firstOrCreatePublisherPlatform($platformID, $publisherID, $reportModel['platform'], $reportModel['publisher']);
+    if($publisherPlatform) {
+      $publisherPlatformID = $publisherPlatform->primaryKey;
+      $holdPublisherPlatform = array(
+        'platformID' => $platformID,
+        'publisherID' => $publisherID,
+        'id' => $publisherPlatform->primaryKey
+      );
     } else {
-      $publisherPlatform = firstOrCreatePublisherPlatform($platformID, $publisherID, $reportModel['platform'], $reportModel['publisher']);
-      if($publisherPlatform) {
-        $publisherPlatformID = $publisherPlatform->primaryKey;
-        $holdPublisherPlatform = array(
-          'platformID' => $platformID,
-          'publisherID' => $publisherID,
-          'id' => $publisherPlatform->primaryKey
-        );
-      } else {
-        continue;
-      }
-      $logOutput[] = _("Publisher / Platform: ") . $holdPublisher['name'] . ' / ' . $holdPlatform['name'];
+      continue;
     }
+    $logOutput[] = _("Publisher / Platform: ") . $holdPublisher['name'] . ' / ' . $holdPlatform['name'];
   }
 
   #################################################################
