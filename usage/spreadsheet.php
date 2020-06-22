@@ -74,7 +74,9 @@ function getTitleIdentifiers($titleID) {
   $titleIdentifiers = $lookupIdentifiers->getIdentifiers();
   $identifierArray = array();
   foreach($titleIdentifiers as $ident) {
-    $identifierArray[strtolower($ident->identifierType)] = $ident->identifier;
+    $type = strtolower($ident->identifierType);
+    $key = $type == 'proprietary identifier' ? 'pi' : $type;
+    $identifierArray[$key] = $ident->identifier;
   }
   return $identifierArray;
 }
@@ -182,6 +184,7 @@ foreach($rows as $titleID => $subRow) {
         }
         $report[$titleID.$rowKey][] = $total;
       } else {
+        $columnKey = $columnKey == 'publisherID' ? 'counterPublisherID' : $columnKey;
         $report[$titleID.$rowKey][] = $data['titleInfo'][$columnKey];
       }
     }

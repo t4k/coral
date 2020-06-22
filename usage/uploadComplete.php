@@ -515,7 +515,7 @@ while (!feof($file_handle)) {
   if (!empty($holdPublisher) && ($reportModel['publisher'] == $holdPublisher['name'])){
     $publisherID = $holdPublisher['id'];
   } else {
-    $publisher = firstOrCreatePublisher($reportModel['counterPublisherID'], $reportModel['publisher']);
+    $publisher = firstOrCreatePublisher($reportModel['publisherID'], $reportModel['publisher']);
     if($publisher) {
       $publisherID = $publisher->primaryKey;
       $holdPublisher = array(
