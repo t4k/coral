@@ -376,7 +376,7 @@ class SushiService extends DatabaseObject
     if (preg_match("/http/i", $this->security)) {
       curl_setopt($ch, CURLOPT_USERPWD, $this->login . ":" . $this->password);
     }
-    curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 600);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
     $this->log("Connecting to $this->serviceURL");
 
