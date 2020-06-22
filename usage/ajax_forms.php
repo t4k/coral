@@ -511,7 +511,7 @@ switch ($action) {
 			</tr>
 			<tr>
 				<td style='vertical-align:top;text-align:right;width:135px;'><label for='reportLayouts'><b><?php echo _("Report Type(s):");?></b></label></td>
-				<td><input type='text' id='reportLayouts' name='reportLayouts' value="<?php if ($sushiServiceID) echo $sushiService->reportLayouts; ?>" style='width:150px;' />
+				<td><input type='text' id='reportLayouts' name='reportLayouts' value="<?php if ($sushiServiceID) echo $sushiService->reportLayouts; ?>" style='width:330px;' />
 					<br /><span class="smallDarkRedText"><?php echo _("separate report types with semi-colon, e.g. JR1;BR1");?></span>
 					<span id='span_error_reportLayouts' style='color:red'></span></td>
 			</tr>
@@ -526,17 +526,17 @@ switch ($action) {
 			</tr>
 			<tr>
 				<td style='vertical-align:top;text-align:right;width:135px;'><label for='requestorID'><b><?php echo _("Requestor ID:");?></b></label></td>
-				<td><input type='text' id='requestorID' name='requestorID' value="<?php if ($sushiServiceID) echo $sushiService->requestorID; ?>" style='width:150px;' /></td>
+				<td><input type='text' id='requestorID' name='requestorID' value="<?php if ($sushiServiceID) echo $sushiService->requestorID; ?>" style='width:330px;' /></td>
 			</tr>
       <tr>
         <td style='vertical-align:top;text-align:right;width:135px;'><label for='apiKey'><b><?php echo _("API Key:");?></b></label></td>
-        <td><input type='text' id='apiKey' name='apiKey' value="<?php if ($sushiServiceID) echo $sushiService->apiKey; ?>" style='width:150px;' />
+        <td><input type='text' id='apiKey' name='apiKey' value="<?php if ($sushiServiceID) echo $sushiService->apiKey; ?>" style='width:330px;' />
           <span class="smallDarkRedText"><br /><?php echo _("for Release 5, some vendors use an API Key for authentication.");?></span>
         </td>
       </tr>
 			<tr>
 				<td style='vertical-align:top;text-align:right;width:135px;'><label for='customerID'><b><?php echo _("Customer ID:");?></b></label></td>
-				<td><input type='text' id='customerID' name='customerID' value="<?php if ($sushiServiceID) echo $sushiService->customerID; ?>" style='width:150px;' /></td>
+				<td><input type='text' id='customerID' name='customerID' value="<?php if ($sushiServiceID) echo $sushiService->customerID; ?>" style='width:330px;' /></td>
 			</tr>
 			<tr>
 				<td style='vertical-align:top;text-align:right;width:135px;'><label for='security'><b><?php echo _("Security Type:");?></b></label></td>
