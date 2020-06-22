@@ -1062,9 +1062,15 @@ switch ($action) {
             </table>
           </td>
         </tr>
+        <tr>
+          <td colspan="2">
+            <p class="darkRedText">
+              <?php echo _("Note: If you rename the platform, any existing SUSHI reports will retain the platform's old name. You should first delete any outstanding SUSHI imports from the queue."); ?>
+            </p>
+          </td>
+        </tr>
 
       </table>
-
     </div>
 
     <script type="text/javascript" src="js/forms/platformUpdateForm.js?random=<?php echo rand(); ?>"></script>
