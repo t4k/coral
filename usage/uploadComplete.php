@@ -172,7 +172,7 @@ function getTitleIdentifiers($reportModel, $prefix = null) {
     // if there is a prefix, e.g. parentDoi
     if (!empty($prefix)) {
       // if the prefix is not found in the key
-      if (!strpos($key, $prefix)) {
+      if (strpos($key, $prefix) === false) {
         continue;
       } else {
         // else update the key to match the map above
@@ -558,11 +558,11 @@ while (!feof($file_handle)) {
   $componentTitleID = null;
 
   // First check if there is a need to process parent/component
-  if (!empty($reportModel['parentTitle']) && !empty($reportModel['parentDataType'])) {
+  if (!empty($reportModel['parentTitle'])) {
     $parentTitleIdentifiers = getTitleIdentifiers($reportModel, 'parent');
-    $parentTitle = createOrUpdateTitle($reportModel['parentTitle'], $parentTitleIdentifiers, $reportModel['parentDataType'], $publisherPlatformID);
+    $parentTitleID = createOrUpdateTitle($reportModel['parentTitle'], $parentTitleIdentifiers, $reportModel['parentDataType'], $publisherPlatformID);
   }
-  if (!empty($reportModel['componentTitle']) && !empty($reportModel['componentDataType'])) {
+  if (!empty($reportModel['componentTitle'])) {
     $componentTitleIdentifiers = getTitleIdentifiers($reportModel, 'component');
     $componentTitleID = createOrUpdateTitle($reportModel['componentTitle'], $parentTitleIdentifiers, $reportModel['componentDataType'], $publisherPlatformID);
   }

@@ -829,6 +829,62 @@ class SushiService extends DatabaseObject
         $row[$this->r5Attr($key)] = $resource[$key];
       }
 
+      // contributors (for Item reports)
+      if (isset($resource['Item_Contributors']) && is_array($resource['Item_Contributors'])) {
+        $authorsArray = array();
+        foreach($resource['Item_Contributors'] as $author) {
+          $string = $author['Name'];
+          if ($author['Identifier']) {
+            $string .= '(' . $author['Identifier'] . ')';
+          }
+          $authorsArray[] = $string;
+        }
+        $row['authors'] = implode(';', $authorsArray);
+      }
+
+      // publication date (for Item reports)
+      if (isset($resource['Item_Dates']) && is_array($resource['Item_Dates'])) {
+        foreach($resource['Item_Dates'] as $date) {
+          if($date['Type'] == 'Publication_Date') {
+            $row['publicationDate'] = $date['Value'];
+          }
+        }
+      }
+
+      // article version (for Item reports)
+      if (isset($resource['Item_Attributes']) && is_array($resource['Item_Attributes'])) {
+        foreach($resource['Item_Attributes'] as $attr) {
+          if($attr['Type'] == 'Article_Version') {
+            $row['articleVersion'] = $attr['Value'];
+          }
+        }
+      }
+
+      // parent (for Item reports)
+      if (isset($resource['Item_Parent'])) {
+        $parent = is_array($resource['Item_Parent']) ? $resource['Item_Parent'][0] : $resource['Item_Parent'];
+        $row['parentTitle'] = $parent['Item_Name'];
+        $row['parentDateType'] = isset($parent['Data_Type']) ? $parent['Data_Type'] : '';
+        if (isset($parent['Item_ID']) && is_array($parent['Item_ID'])) {
+          foreach ($parent['Item_ID'] as $id) {
+            $row[$this->r5Attr('Parent_'.$id['Type'])] = $id['Value'];
+          }
+        }
+      }
+
+      // component (for Item reports)
+      if (isset($resource['Item_Component'])) {
+        $parent = is_array($resource['Item_Component']) ? $resource['Item_Component'][0] : $resource['Item_Component'];
+        $row['componentTitle'] = $parent['ItemName'];
+        $row['componentDateType'] = isset($parent['Data_Type']) ? $parent['Data_Type'] : '';
+        if (isset($parent['Item_ID']) && is_array($parent['Item_ID'])) {
+          foreach ($parent['Item_ID'] as $id) {
+            $row[$this->r5Attr('Component_'.$id['Type'])] = $id['Value'];
+          }
+        }
+      }
+
+
       // identifiers
       foreach ($resource['Item_ID'] as $id) {
         $row[$this->r5Attr($id['Type'])] = $id['Value'];
@@ -1039,14 +1095,18 @@ class SushiService extends DatabaseObject
   public function r5Attr($key) {
     $map = array(
       'Database' => 'title',
-      'Proprietary_ID' => 'pi',
-      'Proprietary' => 'pi',
+      'Item' => 'title',
       'Data_Type' => 'dataType',
       'Access_Method' => 'accessMethod',
       'Metric_Type' => 'activityType',
       'Reporting_Period_Total' => 'ytd',
+      'DOI' => 'doi',
+      'Proprietary_ID' => 'pi',
+      'Proprietary' => 'pi',
+      'ISBN' => 'isbn',
       'Print_ISSN' => 'issn',
       'Online_ISSN' => 'eissn',
+      'URI' => 'uri',
       'Section_Type' => 'sectionType',
       'Access_Type' => 'accessType',
       'Publication_Date' => 'publicationDate',
@@ -1054,7 +1114,8 @@ class SushiService extends DatabaseObject
       'Parent_Title' => 'parentTitle',
       'Parent_Data_Type' => 'parentDataType',
       'Parent_DOI' => 'parentDoi',
-      'Parent_Property_ID' => 'parentPi',
+      'Parent_Proprietary_ID' => 'parentPi',
+      'Parent_Proprietary' => 'parentPi',
       'Parent_ISBN' => 'parentIsbn',
       'Parent_Print_ISSN' => 'parentIssn',
       'Parent_Online_ISSN' => 'parentEissn',
@@ -1069,6 +1130,10 @@ class SushiService extends DatabaseObject
       'Component_URI' => 'componentURI',
     );
     return isset($map[$key]) ? $map[$key] : strtolower($key);
+  }
+
+  public function processContributors($array) {
+
   }
 
 }
