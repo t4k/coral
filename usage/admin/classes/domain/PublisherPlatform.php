@@ -328,7 +328,7 @@ class PublisherPlatform extends DatabaseObject {
   }
 
   //returns arrays of monthly statistics by title
-  public function getMonthlyStatsByLayout($layoutID, $year)
+  public function getMonthlyStatsByLayout($layoutID, $year, $limit = 5000, $offset = 0)
   {
 
 
@@ -346,7 +346,10 @@ class PublisherPlatform extends DatabaseObject {
 					INNER JOIN Title t ON tsm.titleID = t.titleID
 					WHERE pp.publisherPlatformID = '" . $this->publisherPlatformID . "'
 					AND tsm.year='" . $year . "'
-					AND tsm.layoutID = '".$layoutID."'";
+					AND tsm.layoutID = '".$layoutID."'
+					ORDER BY title
+					LIMIT $limit
+					OFFSET $offset";
 
 
     $result = $this->db->processQuery(stripslashes($query), 'assoc');

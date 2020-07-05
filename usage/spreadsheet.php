@@ -1,5 +1,9 @@
 <?php
-
+/*
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+*/
 include_once 'directory.php';
 include "common.php";
 
@@ -62,7 +66,8 @@ $columnsToCheck = $layoutsArray[$layoutKey]['columnToCheck'];
 $pageTitle = $display_name . " " . $reportTypeDisplay . " " .$year;
 
 $itemReport = in_array($layoutCode, array('IR_R5','IR_A1_R5','IR_M1_R5'));
-$monthlyStats = $obj->getMonthlyStatsByLayout($layoutID, $year);
+
+//$monthlyStats = $obj->getMonthlyStatsByLayout($layoutID, $year);
 
 function getTitleIdentifiers($titleID) {
   $lookupIdentifiers = new Title(new NamedArguments(array('primaryKey' => $titleID)));
@@ -79,122 +84,120 @@ function getTitleIdentifiers($titleID) {
 // cache for identifiers to reduce DB calls
 $identifierCache = array();
 
-$rows = array();
-foreach($monthlyStats as $stat) {
-  // the rowKey is a combination of all the different counter 'types', this allows us to present separate rows of the same
-  // title, but with different access, section, and activity types
-  $rowKey = $stat['sectionType'].$stat['accessMethod'].$stat['accessType'].$stat['yop'];
-  // R4 JR reports are not separated by activity type
-  if (in_array($layoutCode, array('JR1_R4', 'JR1a_R4'))) {
-    // and we only want the ft_total
-    if (in_array($stat['activityType'],array('ft_html','ft_pdf'))) {
-      continue;
+
+function compileStats($monthlyStats) {
+  global $identifierCache;
+  global $layoutCode;
+  global $layoutColumns;
+  global $year;
+  $rows = array();
+  foreach($monthlyStats as $stat) {
+    // the rowKey is a combination of all the different counter 'types', this allows us to present separate rows of the same
+    // title, but with different access, section, and activity types
+    $rowKey = $stat['sectionType'].$stat['accessMethod'].$stat['accessType'].$stat['yop'];
+    // R4 JR reports are not separated by activity type
+    if (in_array($layoutCode, array('JR1_R4', 'JR1a_R4'))) {
+      // and we only want the ft_total
+      if (in_array($stat['activityType'],array('ft_html','ft_pdf'))) {
+        continue;
+      }
+    } else {
+      $rowKey .= $stat['activityType'];
     }
-  } else {
-    $rowKey .= $stat['activityType'];
-  }
 
-  // setup Identifiers
-  if (!array_key_exists($stat['titleID'], $identifierCache)) {
-    $identifierCache[$stat['titleID']] = getTitleIdentifiers($stat['titleID']);
-  }
-  $stat = array_merge($stat, $identifierCache[$stat['titleID']]);
+    // setup Identifiers
+    if (!array_key_exists($stat['titleID'], $identifierCache)) {
+      $identifierCache[$stat['titleID']] = getTitleIdentifiers($stat['titleID']);
+    }
+    $stat = array_merge($stat, $identifierCache[$stat['titleID']]);
 
-  // These reports require looking up a potential parent or component title
-  if (in_array($layoutCode, array('IR_R5','IR_A1_R5'))) {
+    // These reports require looking up a potential parent or component title
+    if (in_array($layoutCode, array('IR_R5','IR_A1_R5'))) {
 
-    foreach(array('parent','component') as $parent) {
-      $parentID = $stat[$parent.'ID'];
-      if(!empty($parentID)) {
-        $parentObject = new Title(new NamedArguments(array('primaryKey' => $parentID)));
-        $parentAttrArray = array(
-          $parent.'Title' => $parentObject->title,
-          $parent.'DataType' => $parentObject->resourceType
-        );
-        if (!array_key_exists($parentID, $identifierCache)) {
-          $identifierCache[$parentID] = getTitleIdentifiers($parentID);
+      foreach(array('parent','component') as $parent) {
+        $parentID = $stat[$parent.'ID'];
+        if(!empty($parentID)) {
+          $parentObject = new Title(new NamedArguments(array('primaryKey' => $parentID)));
+          $parentAttrArray = array(
+            $parent.'Title' => $parentObject->title,
+            $parent.'DataType' => $parentObject->resourceType
+          );
+          if (!array_key_exists($parentID, $identifierCache)) {
+            $identifierCache[$parentID] = getTitleIdentifiers($parentID);
+          }
+          foreach($identifierCache[$parentID] as $key => $value) {
+            $parentAttrArray[$parent.ucfirst($key)] = $value;
+          }
+          $stat = array_merge($stat, $parentAttrArray);
         }
-        foreach($identifierCache[$parentID] as $key => $value) {
-          $parentAttrArray[$parent.ucfirst($key)] = $value;
-        }
-        $stat = array_merge($stat, $parentAttrArray);
       }
     }
-  }
 
-  if(array_key_exists($stat['titleID'], $rows)) {
-    if(array_key_exists($rowKey, $rows[$stat['titleID']])) {
-      $rows[$stat['titleID']][$rowKey]['months'][$stat['month']] = $stat['usageCount'];
+    if(array_key_exists($stat['titleID'], $rows)) {
+      if(array_key_exists($rowKey, $rows[$stat['titleID']])) {
+        $rows[$stat['titleID']][$rowKey]['months'][$stat['month']] = $stat['usageCount'];
+      } else {
+        $rows[$stat['titleID']][$rowKey] = array(
+          'titleInfo' => $stat,
+          'months' => array(
+            $stat['month'] => $stat['usageCount']
+          )
+        );
+      }
     } else {
-      $rows[$stat['titleID']][$rowKey] = array(
-        'titleInfo' => $stat,
-        'months' => array(
-          $stat['month'] => $stat['usageCount']
+      $rows[$stat['titleID']] = array(
+        $rowKey => array (
+          'titleInfo' => $stat,
+          'months' => array(
+            $stat['month'] => $stat['usageCount']
+          )
         )
       );
     }
-  } else {
-    $rows[$stat['titleID']] = array(
-      $rowKey => array (
-        'titleInfo' => $stat,
-        'months' => array(
-          $stat['month'] => $stat['usageCount']
-        )
-      )
-    );
   }
+
+  foreach($rows as $titleID => $subRow) {
+    foreach($subRow as $rowKey => $data) {
+      $report[$titleID.$rowKey] = array();
+      foreach($layoutColumns as $columnKey) {
+        if (in_array($layoutCode, array('JR1_R4', 'JR1a_R4')) && $columnKey == 'activityType') {
+          continue;
+        }
+        if($columnKey == 'ytd') {
+          $total = 0;
+          foreach($data['months'] as $month => $count) {
+            $total += $count;
+          }
+          $report[$titleID.$rowKey][] = $total;
+        } else {
+          $columnKey = $columnKey == 'publisherID' ? 'counterPublisherID' : $columnKey;
+          $report[$titleID.$rowKey][] = $data['titleInfo'][$columnKey];
+        }
+      }
+      // JR reports need the ytdPDF and ytdHTML from yearlyUsageSummary
+      if (in_array($layoutCode, array('JR1_R4', 'JR1a_R4'))) {
+        $pdfHtmlCounts = new Title(new NamedArguments(array('primaryKey' => $titleID)));
+        $ytdCounts = $pdfHtmlCounts->getYearlyStats(null, $year, $data['titleInfo']['publisherPlatformID'], null);
+        $ytdCounts = $ytdCounts[0];
+        $report[$titleID.$rowKey][] = $ytdCounts['ytdHTMLCount'];
+        $report[$titleID.$rowKey][] = $ytdCounts['ytdPDFCount'];
+      }
+      foreach(range(1,12) as $monthInt) {
+        $report[$titleID.$rowKey][] = empty($data['months'][$monthInt]) ? '' : $data['months'][$monthInt];
+      }
+    }
+  }
+  return $report;
 }
 
-// sorting
-uasort($rows, function($a, $b) {
-  $aCompare = reset($a)['titleInfo']['title'];
-  $bCompare = reset($b)['titleInfo']['title'];
-  if ($aCompare == $bCompare) {
-    return 0;
-  }
-  return $aCompare > $bCompare ? 1 : -1;
-});
 
 $headers = array();
-$report = array();
 
 foreach ($columnsToCheck as $column) {
   $headers[] = _($column);
 }
 foreach(range(1,12) as $monthInt) {
   $headers[] = numberToMonth($monthInt) . '-' . $year;
-}
-
-foreach($rows as $titleID => $subRow) {
-  foreach($subRow as $rowKey => $data) {
-    $report[$titleID.$rowKey] = array();
-    foreach($layoutColumns as $columnKey) {
-      if (in_array($layoutCode, array('JR1_R4', 'JR1a_R4')) && $columnKey == 'activityType') {
-        continue;
-      }
-      if($columnKey == 'ytd') {
-        $total = 0;
-        foreach($data['months'] as $month => $count) {
-          $total += $count;
-        }
-        $report[$titleID.$rowKey][] = $total;
-      } else {
-        $columnKey = $columnKey == 'publisherID' ? 'counterPublisherID' : $columnKey;
-        $report[$titleID.$rowKey][] = $data['titleInfo'][$columnKey];
-      }
-    }
-    // JR reports need the ytdPDF and ytdHTML from yearlyUsageSummary
-    if (in_array($layoutCode, array('JR1_R4', 'JR1a_R4'))) {
-      $pdfHtmlCounts = new Title(new NamedArguments(array('primaryKey' => $titleID)));
-      $ytdCounts = $pdfHtmlCounts->getYearlyStats(null, $year, $data['titleInfo']['publisherPlatformID'], null);
-      $ytdCounts = $ytdCounts[0];
-      $report[$titleID.$rowKey][] = $ytdCounts['ytdHTMLCount'];
-      $report[$titleID.$rowKey][] = $ytdCounts['ytdPDFCount'];
-    }
-    foreach(range(1,12) as $monthInt) {
-      $report[$titleID.$rowKey][] = empty($data['months'][$monthInt]) ? '' : $data['months'][$monthInt];
-    }
-  }
 }
 
 if ($download) {
@@ -206,20 +209,14 @@ if ($download) {
     $output = fopen('php://output', 'w');
     fputs($output, chr(0xEF).chr(0xBB).chr(0xBF));
     fputcsv($output, $headers);
-    foreach ($report as $row) {
-      fputcsv($output, $row);
-    }
   }
   if ($download === 'tsv') {
     $filename = str_replace (' ','_',$pageTitle) . '.tsv';
     header('Content-type: text/tab-separated-values; charset=utf-8');
     header("Content-Disposition: attachment;filename=$filename");
-    $tsv_data = implode("\t", $headers);
+    echo chr(255) . chr(254);
+    echo mb_convert_encoding(implode("\t", $headers), 'UTF-16LE', 'UTF-8');
     $tsv_data .= "\n";
-    foreach($report as $row) {
-      $tsv_data .= implode("\t", $row) . "\n";
-    }
-    echo chr(255) . chr(254) . mb_convert_encoding($tsv_data, 'UTF-16LE', 'UTF-8');
   }
 } else  {
   include 'templates/header.php';
@@ -234,9 +231,30 @@ if ($download) {
   echo '<table class="dataTable fixed_headers"><tr><th>';
   echo implode("</th><th>", $headers);
   echo '</th></tr>';
-  foreach($report as $row) {
-    echo '<tr><td>' . implode('</td><td>', $row) . "</td></tr>";
+}
+
+$offset = 0;
+$limit = 5000;
+$monthlyCount = 1;
+$monthlyStats = array('test');
+do {
+  $monthlyStats = $obj->getMonthlyStatsByLayout($layoutID, $year, $limit, $offset);
+  if (count($monthlyStats) > 0) {
+    $report = compileStats($monthlyStats);
+    foreach ($report as $row) {
+      if ($download && $download == 'csv') {
+        fputcsv($output, $row);
+      } elseif ($download && $download == 'tsv') {
+        echo mb_convert_encoding(implode("\t", $row) . "\n", 'UTF-16LE', 'UTF-8');
+      } else {
+        echo '<tr><td>' . implode('</td><td>', $row) . "</td></tr>";
+      }
+    }
   }
+  $offset += $limit;
+} while (count($monthlyStats) > 0);
+
+if (empty($download)) {
   echo '</table>';
   include 'templates/footer.php';
 }
