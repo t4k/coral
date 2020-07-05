@@ -163,6 +163,9 @@ function compileStats($monthlyStats) {
         if (in_array($layoutCode, array('JR1_R4', 'JR1a_R4')) && $columnKey == 'activityType') {
           continue;
         }
+        if ($columnKey == 'dataType') {
+          $report[$titleID.$rowKey][] = $data['titleInfo']['resourceType'];
+        }
         if($columnKey == 'ytd') {
           $total = 0;
           foreach($data['months'] as $month => $count) {

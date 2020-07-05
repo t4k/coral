@@ -424,6 +424,9 @@ $headerArray = explode("\t", $header);
 
 // get the months from the header
 $reportMonths = array_splice($headerArray, count($layoutColumns));
+foreach($reportMonths as $index => $month) {
+  $reportMonths[$index] = strtolower(cleanValue($month));
+}
 $logOutput[] = _("Year: ") . $reportMonths[0] . ' - ' . $reportMonths[count($reportMonths) - 1];
 $platformArray = array();
 
@@ -572,9 +575,9 @@ while (!feof($file_handle)) {
   $publicationDate = !empty($reportModel['publicationDate']) ? $reportModel['publicationDate'] : null;
   $authors = !empty($reportModel['authors']) ? $reportModel['authors'] : null;
   $articleVersion = !empty($reportModel['articleVersion']) ? $reportModel['articleVersion'] : null;
-  // If this is a Release 5 Title master report, the resource type might be book or journal
-  if($layoutCode == 'TR_R5') {
-    $resourceType == $reportModel['dataType'];
+  // The release 5 master reports have variable data types
+  if(in_array($layoutCode, array('TR_R5', 'IR_R5', 'PR_R5', 'DR_R5'))) {
+    $resourceType = $reportModel['dataType'];
   }
   $titleID = createOrUpdateTitle($reportModel['title'], $titleIdentifiers, $resourceType, $publisherPlatformID, $publicationDate, $authors, $articleVersion, $parentTitleID, $componentTitleID);
 
