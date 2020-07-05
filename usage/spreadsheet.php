@@ -70,13 +70,50 @@ $itemReport = in_array($layoutCode, array('IR_R5','IR_A1_R5','IR_M1_R5'));
 //$monthlyStats = $obj->getMonthlyStatsByLayout($layoutID, $year);
 
 function getTitleIdentifiers($titleID) {
+  global $platformID;
+  global $publisherPlatformID;
   $lookupIdentifiers = new Title(new NamedArguments(array('primaryKey' => $titleID)));
   $titleIdentifiers = $lookupIdentifiers->getIdentifiers();
-  $identifierArray = array();
+
+  // First, group the identifiers so we can extract the correct association
+  $groupedIdentifiers = array();
   foreach($titleIdentifiers as $ident) {
     $type = strtolower($ident->identifierType);
     $key = $type == 'proprietary identifier' ? 'pi' : $type;
-    $identifierArray[$key] = $ident->identifier;
+    if (!isset($groupedIdentifiers[$key])) {
+      $groupedIdentifiers[$key] = array();
+    }
+    $groupedIdentifiers[$key][] = array(
+      'identifier' => $ident->identifier,
+      'publisherPlatformID' => $ident->publisherPlatformID,
+      'platformID' => $ident->platformID
+    );
+  }
+
+  $identifierArray = array();
+  foreach ($groupedIdentifiers as $key => $values) {
+    if (count($values) == 1) {
+      // if the number of identifiers for this type is 1, use that
+      $identifierArray[$key] = $values[0]['identifier'];
+    } else {
+      // else need to find the one corresponding to the publisherPlatform
+      if (!empty($publisherPlatformID)) {
+        foreach ($values as $v) {
+          if ($v['publisherPlatformID'] == $publisherPlatformID) {
+            $value = $v['identifier'];
+          }
+        }
+      } elseif (!empty($platformID)) {
+        foreach ($values as $v) {
+          if ($v['platformID'] == $platformID) {
+            $value = $v['identifier'];
+          }
+        }
+      } else {
+        $value = $values[0]['identifier'];
+      }
+      $identifierArray[$key] = $value;
+    }
   }
   return $identifierArray;
 }

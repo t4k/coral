@@ -539,8 +539,11 @@ class Platform extends DatabaseObject {
 							WHERE platformID = '" . $this->platformID . "')
 							AND year = '"  . $year . "'
 							AND month = '" . $month . "'
-							AND layoutID = $layoutID
-							AND archiveInd = '" . $archiveInd . "';";
+							AND layoutID = $layoutID";
+
+		if (!empty($archiveInd)) {
+		  $query .= " AND archiveInd = $archiveInd";
+    }
 
 		return $this->db->processQuery($query);
 

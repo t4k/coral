@@ -1,4 +1,6 @@
 ALTER TABLE TitleIdentifier MODIFY identifier VARCHAR(255);
+ALTER TABLE TitleIdentifier ADD COLUMN publisherPlatformID VARCHAR(255) NULL;
+ALTER TABLE TitleIdentifier ADD COLUMN platformID VARCHAR(255) NULL;
 ALTER TABLE ImportLog MODIFY fileName VARCHAR(255);
 ALTER TABLE SushiService MODIFY reportLayouts VARCHAR(255);
 ALTER TABLE Layout MODIFY name VARCHAR(255);

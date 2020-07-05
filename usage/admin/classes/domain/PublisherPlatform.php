@@ -436,12 +436,14 @@ class PublisherPlatform extends DatabaseObject {
 
 		//now formulate query
 		$query = "DELETE FROM MonthlyUsageSummary
-					WHERE archiveInd = '" . $archiveInd . "'
-					AND publisherPlatformID = '" . $this->publisherPlatformID . "'
+					WHERE publisherPlatformID = '" . $this->publisherPlatformID . "'
 					AND year = '"  . $year . "'
 					AND layoutID = $layoutID
 					AND month = '" . $month . "';";
 
+    if (!empty($archiveInd)) {
+      $query .= " AND archiveInd = $archiveInd";
+    }
 		return $this->db->processQuery($query);
 
 	}

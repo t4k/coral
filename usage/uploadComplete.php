@@ -189,7 +189,7 @@ function getTitleIdentifiers($reportModel, $prefix = null) {
   return $titleIdentifiers;
 }
 
-function createOrUpdateTitle($titleName, $titleIdentifiers, $resourceType, $publisherPlatformID, $publicationDate = null, $authors = null, $articleVersion = null, $parentID = null, $componentID = null) {
+function createOrUpdateTitle($titleName, $titleIdentifiers, $resourceType, $publisherPlatformID, $platformID, $publicationDate = null, $authors = null, $articleVersion = null, $parentID = null, $componentID = null) {
 
   $titleID = null;
   $queryObject = new Title();
@@ -256,6 +256,8 @@ function createOrUpdateTitle($titleName, $titleIdentifiers, $resourceType, $publ
     $titleIdentifier->titleID = $titleID;
     $titleIdentifier->identifier = $value;
     $titleIdentifier->identifierType = $type;
+    $titleIdentifier->publisherPlatformID = $publisherPlatformID;
+    $titleIdentifier->platformID = $platformID;
     try {
       $titleIdentifier->save();
     } catch (Exception $e) {
@@ -569,11 +571,11 @@ while (!feof($file_handle)) {
   // First check if there is a need to process parent/component
   if (!empty($reportModel['parentTitle'])) {
     $parentTitleIdentifiers = getTitleIdentifiers($reportModel, 'parent');
-    $parentTitleID = createOrUpdateTitle($reportModel['parentTitle'], $parentTitleIdentifiers, $reportModel['parentDataType'], $publisherPlatformID);
+    $parentTitleID = createOrUpdateTitle($reportModel['parentTitle'], $parentTitleIdentifiers, $reportModel['parentDataType'], $publisherPlatformID, $platformID);
   }
   if (!empty($reportModel['componentTitle'])) {
     $componentTitleIdentifiers = getTitleIdentifiers($reportModel, 'component');
-    $componentTitleID = createOrUpdateTitle($reportModel['componentTitle'], $parentTitleIdentifiers, $reportModel['componentDataType'], $publisherPlatformID);
+    $componentTitleID = createOrUpdateTitle($reportModel['componentTitle'], $parentTitleIdentifiers, $reportModel['componentDataType'], $publisherPlatformID, $platformID);
   }
 
   // Get the title identifiers
@@ -585,7 +587,7 @@ while (!feof($file_handle)) {
   if(in_array($layoutCode, array('TR_R5', 'IR_R5', 'PR_R5', 'DR_R5'))) {
     $resourceType = $reportModel['dataType'];
   }
-  $titleID = createOrUpdateTitle($reportModel['title'], $titleIdentifiers, $resourceType, $publisherPlatformID, $publicationDate, $authors, $articleVersion, $parentTitleID, $componentTitleID);
+  $titleID = createOrUpdateTitle($reportModel['title'], $titleIdentifiers, $resourceType, $publisherPlatformID, $platformID, $publicationDate, $authors, $articleVersion, $parentTitleID, $componentTitleID);
 
   if ($titleID) {
     // Log the title
