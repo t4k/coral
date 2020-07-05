@@ -425,7 +425,12 @@ $headerArray = explode("\t", $header);
 // get the months from the header
 $reportMonths = array_splice($headerArray, count($layoutColumns));
 foreach($reportMonths as $index => $month) {
-  $reportMonths[$index] = strtolower(cleanValue($month));
+  if (!empty($month)) {
+    $monthKey = strtolower(cleanValue($month));
+    if (!empty($monthKey)) {
+      $reportMonths[$index] = $monthKey;
+    }
+  }
 }
 $logOutput[] = _("Year: ") . $reportMonths[0] . ' - ' . $reportMonths[count($reportMonths) - 1];
 $platformArray = array();
