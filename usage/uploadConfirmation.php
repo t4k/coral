@@ -95,7 +95,7 @@ if ($fromSushi) {
   $pathInfo = pathinfo($_FILES['usageFile']['name']);
 
   // check the extension is valid
-  if (!in_array($pathInfo['extension'], array('txt','tsv'))) {
+  if (!in_array(strtolower($pathInfo['extension']), array('txt','tsv'))) {
     header( 'Location: import.php?error=1' ) ;
     exit();
   }
