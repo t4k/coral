@@ -115,6 +115,7 @@ if ($download) {
     header('Content-Type: text/csv; charset=utf-8');
     header("Content-Disposition: attachment; filename=$filename");
     $output = fopen('php://output', 'w');
+    fputs($output, chr(0xEF).chr(0xBB).chr(0xBF));
     fputcsv($output, $report['headers']);
     foreach ($report['data'] as $row) {
       fputcsv($output, $row);
@@ -122,13 +123,14 @@ if ($download) {
   }
   if ($download === 'tsv') {
     $filename = str_replace (' ','_',$pageTitle) . '.tsv';
-    header('Content-type: text/tab-separated-values');
+    header('Content-type: text/tab-separated-values; charset=utf-8');
     header("Content-Disposition: attachment;filename=$filename");
-    echo implode("\t", $report['headers']);
-    echo "\n";
+    $tsv_data = implode("\t", $report['headers']);
+    $tsv_data .= "\n";
     foreach($report['data'] as $row) {
-      echo implode("\t", $row) . "\n";
+      $tsv_data .= implode("\t", $row) . "\n";
     }
+    echo chr(255) . chr(254) . mb_convert_encoding($tsv_data, 'UTF-16LE', 'UTF-8');
   }
 } else  {
   include 'templates/header.php';

@@ -60,11 +60,6 @@ $layoutColumns = $layoutsArray[$layoutKey]['columns'];
 $columnsToCheck = $layoutsArray[$layoutKey]['columnToCheck'];
 
 $pageTitle = $display_name . " " . $reportTypeDisplay . " " .$year;
-if($download) {
-  $excelfile = str_replace (' ','_',$pageTitle) . '.xls';
-  header("Content-type: application/vnd.ms-excel");
-  header("Content-Disposition: attachment; filename=" . $excelfile);
-}
 
 $itemReport = in_array($layoutCode, array('IR_R5','IR_A1_R5','IR_M1_R5'));
 $monthlyStats = $obj->getMonthlyStatsByLayout($layoutID, $year);
@@ -209,6 +204,7 @@ if ($download) {
     header('Content-Type: text/csv; charset=utf-8');
     header("Content-Disposition: attachment; filename=$filename");
     $output = fopen('php://output', 'w');
+    fputs($output, chr(0xEF).chr(0xBB).chr(0xBF));
     fputcsv($output, $headers);
     foreach ($report as $row) {
       fputcsv($output, $row);
@@ -216,13 +212,14 @@ if ($download) {
   }
   if ($download === 'tsv') {
     $filename = str_replace (' ','_',$pageTitle) . '.tsv';
-    header('Content-type: text/tab-separated-values');
+    header('Content-type: text/tab-separated-values; charset=utf-8');
     header("Content-Disposition: attachment;filename=$filename");
-    echo implode("\t", $headers);
-    echo "\n";
+    $tsv_data = implode("\t", $headers);
+    $tsv_data .= "\n";
     foreach($report as $row) {
-      echo implode("\t", $row) . "\n";
+      $tsv_data .= implode("\t", $row) . "\n";
     }
+    echo chr(255) . chr(254) . mb_convert_encoding($tsv_data, 'UTF-16LE', 'UTF-8');
   }
 } else  {
   include 'templates/header.php';
