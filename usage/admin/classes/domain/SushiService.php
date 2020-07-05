@@ -396,12 +396,19 @@ class SushiService extends DatabaseObject
     }
     curl_close($ch);
 
+
     // Check for errors
     try {
       $json = json_decode($response);
     } catch (Exception $e) {
       $error = $e->getMessage();
       $this->logStatus("There was an error trying to parse the SUSHI report from $serviceProvider. This could be due to a malformed response from the sushi service. Error: $error");
+      $this->saveLogAndExit($reportLayout);
+    }
+
+    // if the json is empty
+    if (empty($json)) {
+      $this->logStatus("No data was returned from $serviceProvider using the endpoint: $endpoint");
       $this->saveLogAndExit($reportLayout);
     }
 
