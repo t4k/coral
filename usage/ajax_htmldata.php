@@ -1441,7 +1441,6 @@ switch ($action) {
 				<th><table class='noBorderTable'><tr><td><?php echo _("Next Run");?></td><td class='arrow'><a href='javascript:setOrder("serviceDayOfMonth","asc");'><img src='images/arrowup.png' border=0></a>&nbsp;<a href='javascript:setOrder("serviceDayOfMonth","desc");'><img src='images/arrowdown.png' border=0></a></td></tr></table></th>
 				<th><table class='noBorderTable'><tr><td><?php echo _("Latest Run");?></td><td class='arrow'><a href='javascript:setOrder("importDateTime","asc");'><img src='images/arrowup.png' border=0></a>&nbsp;<a href='javascript:setOrder("ImportDateTime","desc");'><img src='images/arrowdown.png' border=0></a></td></tr></table></th>
 				<th><table class='noBorderTable'><tr><td><?php echo _("Latest Status");?></td><td class='arrow'><a href='javascript:setOrder("details","asc");'><img src='images/arrowup.png' border=0></a>&nbsp;<a href='javascript:setOrder("details","desc");'><img src='images/arrowdown.png' border=0></a></td></tr></table></th>
-				<th><table class='noBorderTable'><tr><td><?php echo _("By");?></td><td class='arrow'><a href='javascript:setOrder("loginID","asc");'><img src='images/arrowup.png' border=0></a>&nbsp;<a href='javascript:setOrder("loginID","desc");'><img src='images/arrowdown.png' border=0></a></td></tr></table></th>
 			</tr>
 
 			<?php
@@ -1484,7 +1483,6 @@ switch ($action) {
 				echo "<td $classAdd>" . format_date($platform['next_import']) . "</td>";
 				echo "<td $classAdd>" . format_date($platform['last_import']) . "</td>";
 				echo "<td $classAdd>" . ImportLog::shortStatusFromDetails($platform['details']) . "</td>";
-				echo "<td $classAdd>" . $platform['loginID'] . "</td>";
 				echo "</tr>";
 			}
 
