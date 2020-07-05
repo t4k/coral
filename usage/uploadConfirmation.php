@@ -232,7 +232,9 @@ include 'templates/header.php';
       <p>
         <?php echo _('Report Format'); ?>: <?php echo $page['reportName']; ?>
         <br>
-        <?php echo _('If this is incorrect, please use \'Cancel\' to go back and fix the headers of the file.'); ?>
+        <?php if(!$fromSushi): ?>
+          <?php echo _('If this is incorrect, please use \'Cancel\' to go back and fix the headers of the file.'); ?>
+        <?php endif; ?>
       </p>
 
       <table class='dataTable' style='width:895px;'>
