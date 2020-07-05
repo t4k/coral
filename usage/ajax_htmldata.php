@@ -22,7 +22,6 @@
 **************************************************************************************************************************
 */
 
-
 include_once 'directory.php';
 include "common.php";
 
@@ -1458,25 +1457,24 @@ switch ($action) {
 				echo "<tr>";
 				echo "<td $classAdd><a href='publisherPlatform.php?platformID=" . $platform['platformID'] . "'>" . $platform['name'] . "</a></td>";
 				echo "<td $classAdd>";
-					if (strlen($platform['publishers']) == "0"){
+          $getPublishers = new Platform(new NamedArguments(array('primaryKey' => $platform['platformID'])));
+          $publisherPlatformArray = $getPublishers->getPublisherPlatforms();
+					if (count($publisherPlatformArray) == 0){
 						echo _("(none found)");
 					}else{
-						$publisherPlatformArray = explode(":", $platform['publishers']);
 
 					 	if (count($publisherPlatformArray) > 5){
 							echo "<a href=\"javascript:showPublisherList('" . $platform['platformID'] . "');\"><img src='images/arrowright.gif' style='border:0px' alt='" . _("show publisher list") . "' id='image_" . $platform['platformID'] . "'></a>&nbsp;<a href=\"javascript:showPublisherList('" . $platform['platformID'] . "');\" id='link_" . $platform['platformID'] . "'>" . _("show publisher list") . "</a><br />";
 							echo "<div id='div_" . $platform['platformID'] . "' style='display:none;width:300px;margin-left:5px'>";
 
-							foreach($publisherPlatformArray as $publisherPlatformID){
-								$publisherPlatform = new PublisherPlatform(new NamedArguments(array('primaryKey' => $publisherPlatformID)));
-								echo "<a href='publisherPlatform.php?publisherPlatformID=" . $publisherPlatformID . "'>" . $publisherPlatform->reportDisplayName . "</a><br />\n";
+							foreach($publisherPlatformArray as $publisherPlatform){
+								echo "<a href='publisherPlatform.php?publisherPlatformID=" . $publisherPlatform->publisherPlatformID . "'>" . $publisherPlatform->reportDisplayName . "</a><br />\n";
 							}
 
 							echo "</div>";
 						}else{
-							foreach($publisherPlatformArray as $publisherPlatformID){
-								$publisherPlatform = new PublisherPlatform(new NamedArguments(array('primaryKey' => $publisherPlatformID)));
-								echo "<a href='publisherPlatform.php?publisherPlatformID=" . $publisherPlatformID . "'>" . $publisherPlatform->reportDisplayName . "</a><br />\n";
+							foreach($publisherPlatformArray as $publisherPlatform){
+								echo "<a href='publisherPlatform.php?publisherPlatformID=" . $publisherPlatform->publisherPlatformID . "'>" . $publisherPlatform->reportDisplayName . "</a><br />\n";
 							}
 						}
 					}

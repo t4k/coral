@@ -1010,16 +1010,12 @@ class Platform extends DatabaseObject {
 
 		//now actually execute query
 		$query = "SELECT P.platformID, P.name, P.reportDisplayName,
-						GROUP_CONCAT(DISTINCT PP.publisherPlatformID ORDER BY PP.reportDisplayName DESC SEPARATOR ':') publishers,
 						date(importDateTime) last_import,
 						loginID,
 						details,
 						if(serviceDayOfMonth > day(now()), str_to_date(concat(EXTRACT(YEAR_MONTH FROM NOW()), lpad(serviceDayOfMonth,2,'0')), '%Y%m%d'), str_to_date(concat(EXTRACT(YEAR_MONTH FROM NOW()) + 1, lpad(serviceDayOfMonth,2,'0')), '%Y%m%d') ) next_import
 								FROM
 									Platform P
-									LEFT JOIN (PublisherPlatform PP
-										INNER JOIN Publisher USING (publisherID))
-									ON P.PlatformID = PP.PlatformID
 									LEFT JOIN (SELECT platformID, mil.importLogID, max(importDateTime) importDateTime, loginID, details FROM ImportLog mil INNER JOIN ImportLogPlatformLink mipl USING (ImportLogID) GROUP BY platformID) mil ON P.platformID = mil.platformID
 									LEFT JOIN SushiService SS ON P.PlatformID = SS.PlatformID
 									" . $whereStatement . "
