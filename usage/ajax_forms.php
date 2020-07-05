@@ -1065,7 +1065,7 @@ switch ($action) {
         <tr>
           <td colspan="2">
             <p class="darkRedText">
-              <?php echo _("Note: If you rename the platform, any existing SUSHI reports will retain the platform's old name. You should first delete any outstanding SUSHI imports from the queue."); ?>
+              <?php echo _("If you change the platform name, any existing COUNTER reports will continue to use the original platform name. Before changing the platform name, make sure that you have no SUSHI reports for this platform in the outstanding import queue."); ?>
             </p>
           </td>
         </tr>
