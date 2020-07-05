@@ -599,6 +599,7 @@ switch ($action) {
     if (!empty($platformID)) {
       $obj = new Platform(new NamedArguments(array('primaryKey' => $platformID)));
       $obj->name = $_POST['platformName'];
+      $obj->reportDisplayName = $_POST['platformName'];
       try {
         $obj->save();
       } catch (Exception $e) {
