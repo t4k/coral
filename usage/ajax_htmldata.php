@@ -60,7 +60,7 @@ switch ($action) {
 			echo "<table class='dataTable' style='width:100%;'>";
 			echo "<tr>";
 			echo "<th style='padding:3px;'>" . _("Import Date") . "</th>";
-			echo "<th style='padding:3px;'>" . _("Imported By") . "</th>";
+			echo "<th style='padding:3px;'>" . _("Last Updated By") . "</th>";
 			echo "<th style='padding:3px;'>" . _("Import Summary") . "</th>";
 			echo "<th style='padding:3px;'>&nbsp;</th>";
 			echo "<th style='padding:3px;'>&nbsp;</th>";
@@ -1071,7 +1071,7 @@ switch ($action) {
 			echo "<table class='dataTable' style='width:630px; max-width:630px;'>";
 			echo "<tr>";
 			echo "<th style='padding:3px;'>" . _("Import Date") . "</th>";
-			echo "<th style='padding:3px;'>" . _("Imported By") . "</th>";
+			echo "<th style='padding:3px;'>" . _("Last Updated By") . "</th>";
 			echo "<th style='padding:3px;'>" . _("Import Summary") . "</th>";
 			echo "<th style='padding:3px;'>&nbsp;</th>";
 			echo "<th style='padding:3px;'>&nbsp;</th>";
