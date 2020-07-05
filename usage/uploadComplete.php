@@ -243,8 +243,9 @@ function createOrUpdateTitle($titleName, $titleIdentifiers, $resourceType, $publ
   // for each existing identifier, check the value against the title identifiers from the report
   foreach($existingIdentifiers as $existingIdentifier) {
     // if they are the same, remove the identifier from the identifiersToAdd
-    if($titleIdentifiers[$existingIdentifier->type] == $existingIdentifier->identifier) {
-      unset($identifiersToAdd[$existingIdentifier->type]);
+    $existing = $existingIdentifier->identifier;
+    if($titleIdentifiers[$existingIdentifier->identifierType] == $existing) {
+      unset($identifiersToAdd[$existingIdentifier->identifierType]);
     }
   }
 
