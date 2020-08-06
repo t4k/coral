@@ -382,6 +382,8 @@ class SushiService extends DatabaseObject
     }
     curl_setopt($ch, CURLOPT_TIMEOUT, 600);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
+    curl_setopt($ch, CURLOPT_USERAGENT, 'CoralSushiService');
     $this->log("Connecting to $this->serviceURL");
 
     // try executing curl
