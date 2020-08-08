@@ -368,8 +368,9 @@ class SushiService extends DatabaseObject
 
     // If an IR or IR_A1 report get the parent and component details
     if (in_array($reportLayout, ['IR', 'IR_A1'])) {
-      $params['include_component_details'] = true;
-      $params['include_parent_details'] = true;
+      // Using a boolean true causes some vendors to balk as this is converted to a 1 in the curl call
+      $params['include_component_details'] = 'true';
+      $params['include_parent_details'] = 'true';
     }
 
     // setup curl client
