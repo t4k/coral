@@ -3282,6 +3282,7 @@ input#archiveInd {
     margin-bottom: 10px;
 }
 
+<<<<<<< HEAD
 /*--- Icons align in ProductsDetails ---*/
 .alignIcons{
 	display: flex;
@@ -3315,4 +3316,14 @@ input#archiveInd {
 
 .addIconAlert {
 	vertical-align: 3px;
+}
+
+/*--- Add space before and after each downtime definition ---*/
+
+dt:first-child {
+    padding-top: .5em;
+}
+
+div.downtime {
+    padding-bottom: 1em;
 }
